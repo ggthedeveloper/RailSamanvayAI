@@ -257,7 +257,7 @@ function ControlRoom({ token, onLogout }: { token: string; onLogout: () => void 
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <span style={{ fontSize: 18, fontWeight: 800, letterSpacing: '-0.02em', color: '#0f172a' }}>
-                RailSamanV
+                RailSamanvayAI
               </span>
               <span style={{
                 padding: '2px 8px',

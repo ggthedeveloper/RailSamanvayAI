@@ -90,7 +90,7 @@ export function Login({ setToken }: { setToken: (token: string) => void }) {
             <Train size={32} color={theme.blue} />
           </div>
           <h1 style={{ margin: 0, fontSize: 26, fontWeight: 800, color: theme.text, letterSpacing: '-0.02em' }}>
-            RailSamanV
+            RailSamanvayAI
           </h1>
           <p style={{ margin: '6px 0 0', fontSize: 12, color: theme.blue, fontWeight: 700, letterSpacing: '0.06em' }}>
             AUTOMATIC RAILWAY BLOCK PLANNING SYSTEM

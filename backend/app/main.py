@@ -13,7 +13,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.api import endpoints, auth
 
-app = FastAPI(title="Railway Block Planner API", version="1.0")
+app = FastAPI(title="RailSamanvayAI API", version="1.0")
 
 default_origins = [
     "http://localhost:5173",
