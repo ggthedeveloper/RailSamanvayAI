@@ -37,11 +37,25 @@ export function OverviewView({
   const overdueCriticalCount = tasks.filter(t => t.safety_critical && (t.overdue_days || 0) > 0).length;
   const criticalConflictsCount = conflicts.filter(c => c.severity === 'CRITICAL').length;
 
-  // Joint Possessions (Multi-Department Synergy)
+  // Joint Possessions (Multi-Department Synergy) & Real Downtime Overlap
   const jointTasksCount = plans.filter(p => p.is_joint_possession).length;
-  const jointBlocksSet = new Set(plans.filter(p => p.is_joint_possession).map(p => p.block_id));
-  const jointBlocksCount = jointBlocksSet.size;
-  const totalDowntimeSavedMin = jointBlocksCount * 180;
+  const blockTaskMap = new Map<string, PlanTask[]>();
+  plans.forEach(p => {
+    if (!blockTaskMap.has(p.block_id)) blockTaskMap.set(p.block_id, []);
+    blockTaskMap.get(p.block_id)!.push(p);
+  });
+
+  let totalDowntimeSavedMin = 0;
+  let jointBlocksCount = 0;
+  blockTaskMap.forEach(blockTasks => {
+    if (blockTasks.length > 1) {
+      jointBlocksCount++;
+      const durations = blockTasks.map(t => t.duration || t.required_duration_min || 0);
+      const sumDur = durations.reduce((a, b) => a + b, 0);
+      const maxDur = Math.max(...durations);
+      totalDowntimeSavedMin += Math.max(0, sumDur - maxDur);
+    }
+  });
   const totalDowntimeSavedHours = (totalDowntimeSavedMin / 60).toFixed(1);
 
   const engCount = plans.filter(p => (p.department || '').includes('ENG') || (p.department || '').includes('CIVIL')).length;
@@ -101,7 +115,7 @@ export function OverviewView({
           {
             title: 'Block Windows Utilized',
             val: blocksUsedCount,
-            sub: `Out of ${blocks.length || 231} available windows`,
+            sub: `Out of ${blocks.length} available windows`,
             icon: Calendar,
             color: theme.cyan
           },

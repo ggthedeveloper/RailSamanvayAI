@@ -1,0 +1,42 @@
+{
+  "audit_timestamp": "2026-09-08T01:56:33.689923",
+  "source_files": [
+    "data/raw/assets.csv",
+    "data/raw/maintenance_tasks.csv",
+    "data/raw/maintenance_history.csv"
+  ],
+  "row_counts": {
+    "assets": 20,
+    "maintenance_tasks": 20,
+    "maintenance_history": 20,
+    "merged_features": 20
+  },
+  "has_genuine_failure_target": false,
+  "target_status": "Supplied maintenance_history.csv contains exclusively 'Completed' records without historical failure/breakdown ground truth.",
+  "target_column": null,
+  "feature_list": [
+    "condition_score",
+    "days_since_maintenance",
+    "defect_history",
+    "traffic_load",
+    "age_days",
+    "is_safety_critical",
+    "dept_eng",
+    "dept_smt",
+    "dept_trd",
+    "overdue_days"
+  ],
+  "missingness": {
+    "condition_score": 0,
+    "days_since_maintenance": 0,
+    "defect_history": 0,
+    "traffic_load": 0,
+    "age_days": 0,
+    "is_safety_critical": 0,
+    "dept_eng": 0,
+    "dept_smt": 0,
+    "dept_trd": 0,
+    "overdue_days": 0
+  },
+  "notes": "Target fabrication strictly disabled. Real datasets do not record historical failure incidents, so supervised retraining is bypassed to maintain data integrity."
+}

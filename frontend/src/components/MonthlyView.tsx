@@ -43,7 +43,7 @@ export function MonthlyView({ goodsForecasts }: { goodsForecasts: GoodsForecastI
                   </span>
                 </div>
                 <div style={{ fontSize: 11, color: theme.textDim, marginTop: 4 }}>
-                  Zone: {gf.zone} · Horizon: {gf.forecast_horizon_days} Days · Date: {gf.forecast_date ? gf.forecast_date.substring(0, 10) : '2026-09-01'}
+                  Zone: {gf.zone} · Horizon: {gf.forecast_horizon_days} Days · Date: {gf.forecast_date ? gf.forecast_date.substring(0, 10) : 'Active Month'} · Source: {gf.data_source || 'FOIS / COA'}
                 </div>
               </div>
 
@@ -51,8 +51,8 @@ export function MonthlyView({ goodsForecasts }: { goodsForecasts: GoodsForecastI
                 <div style={{ fontSize: 16, fontWeight: 800, color: theme.amber }}>
                   {gf.predicted_goods_trains} Freight Trains/Day
                 </div>
-                <div style={{ fontSize: 11, color: theme.green }}>
-                  Recommended Window: 01:00 - 04:30 Midnight
+                <div style={{ fontSize: 11, color: theme.textDim, marginTop: 2 }}>
+                  Confidence Interval: {gf.lower_bound} – {gf.upper_bound} trains
                 </div>
               </div>
             </div>

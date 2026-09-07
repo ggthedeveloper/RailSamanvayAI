@@ -43,10 +43,29 @@ export function PlanningView({
   const [approvalFilter, setApprovalFilter] = useState<string>('ALL');
   const [jointOnly, setJointOnly] = useState<boolean>(false);
 
-  // Joint possession metrics
-  const jointBlocksSet = useMemo(() => new Set(plans.filter(p => p.is_joint_possession).map(p => p.block_id)), [plans]);
-  const jointBlocksCount = jointBlocksSet.size;
-  const jointDowntimeHours = (jointBlocksCount * 3).toFixed(1);
+  // Joint possession metrics with true calculated overlap duration
+  const { jointBlocksCount, jointDowntimeHours } = useMemo(() => {
+    const blockMap = new Map<string, PlanTask[]>();
+    plans.forEach(p => {
+      if (!blockMap.has(p.block_id)) blockMap.set(p.block_id, []);
+      blockMap.get(p.block_id)!.push(p);
+    });
+    let savedMin = 0;
+    let jointCount = 0;
+    blockMap.forEach(tasksInBlock => {
+      if (tasksInBlock.length > 1) {
+        jointCount++;
+        const durations = tasksInBlock.map(t => t.duration || t.required_duration_min || 0);
+        const sumDur = durations.reduce((a, b) => a + b, 0);
+        const maxDur = Math.max(...durations);
+        savedMin += Math.max(0, sumDur - maxDur);
+      }
+    });
+    return {
+      jointBlocksCount: jointCount,
+      jointDowntimeHours: (savedMin / 60).toFixed(1)
+    };
+  }, [plans]);
 
   // Pagination
   const [currentPage, setCurrentPage] = useState<number>(1);
@@ -78,6 +97,14 @@ export function PlanningView({
 
   // Paginated subset
   const totalPages = Math.max(1, Math.ceil(filteredPlans.length / pageSize));
+
+  // Reset or clamp currentPage if filter reduces page count
+  React.useEffect(() => {
+    if (currentPage > totalPages) {
+      setCurrentPage(1);
+    }
+  }, [totalPages, currentPage]);
+
   const paginatedPlans = useMemo(() => {
     const start = (currentPage - 1) * pageSize;
     return filteredPlans.slice(start, start + pageSize);
@@ -323,7 +350,7 @@ export function PlanningView({
             onChange={e => { setJointOnly(e.target.checked); setCurrentPage(1); }}
             style={{ accentColor: theme.green }}
           />
-          ⚡ Joint Only (+180m Saved)
+          ⚡ Joint Only (Combined Possessions)
         </label>
 
         {(searchQuery || deptFilter !== 'ALL' || priorityFilter !== 'ALL' || safetyOnly || jointOnly || approvalFilter !== 'ALL') && (

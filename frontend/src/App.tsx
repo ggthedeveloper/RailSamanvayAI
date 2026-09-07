@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
+import { BrowserRouter, Navigate, Route, Routes, NavLink, useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import {
   Train, RefreshCw, Clock, LogOut, Activity, MapPin, Layers,
@@ -14,6 +14,7 @@ import {
 } from './types';
 import { API_URL, theme, cardStyle, badgeStyle, buttonPrimary, authHeaders, apiError } from './theme';
 
+import { ErrorBoundary } from './components/ErrorBoundary';
 import { Login } from './components/Login';
 import { MapView } from './components/MapView';
 import { RouteAnalyzer } from './components/RouteAnalyzer';
@@ -28,10 +29,9 @@ import { IntegrationsView } from './components/IntegrationsView';
 import { SettingsView } from './components/SettingsView';
 
 function ControlRoom({ token, onLogout }: { token: string; onLogout: () => void }) {
-  // Navigation State
-  const [activeTab, setActiveTab] = useState<
-    'overview' | 'map' | 'planning' | 'tasks' | 'weekly' | 'monthly' | 'conflicts' | 'approval' | 'integrations' | 'settings'
-  >('overview');
+  // Navigation Hooks
+  const navigate = useNavigate();
+  const location = useLocation();
 
   // Core Data Stores
   const [stations, setStations] = useState<Station[]>([]);
@@ -388,24 +388,23 @@ function ControlRoom({ token, onLogout }: { token: string; onLogout: () => void 
 
             <nav style={{ display: 'grid', gap: 4 }}>
               {[
-                { id: 'overview', label: 'Overview', icon: Activity },
-                { id: 'map', label: 'Network Map & AI', icon: MapPin },
-                { id: 'planning', label: 'Block Planning', icon: Layers, badge: plans.length },
-                { id: 'tasks', label: 'Maintenance Tasks', icon: ListTodo, badge: tasks.length },
-                { id: 'weekly', label: 'Weekly Plan', icon: Calendar },
-                { id: 'monthly', label: 'Monthly Rolling', icon: Compass },
-                { id: 'conflicts', label: 'Conflicts & Alerts', icon: AlertTriangle, badge: conflicts.length, badgeColor: theme.red },
-                { id: 'approval', label: 'Possession Sign-Off', icon: FileCheck },
-                { id: 'integrations', label: 'Data Integrations', icon: Database, badge: '6/6' },
-                { id: 'settings', label: 'Solver & Config', icon: Settings }
+                { path: '/overview', label: 'Overview', icon: Activity },
+                { path: '/network', label: 'Network Map & AI', icon: MapPin },
+                { path: '/planning', label: 'Block Planning', icon: Layers, badge: plans.length },
+                { path: '/tasks', label: 'Maintenance Tasks', icon: ListTodo, badge: tasks.length },
+                { path: '/weekly', label: 'Weekly Plan', icon: Calendar },
+                { path: '/monthly', label: 'Monthly Rolling', icon: Compass },
+                { path: '/conflicts', label: 'Conflicts & Alerts', icon: AlertTriangle, badge: conflicts.length, badgeColor: theme.red },
+                { path: '/approval', label: 'Possession Sign-Off', icon: FileCheck },
+                { path: '/integrations', label: 'Data Integrations', icon: Database, badge: '6/6' },
+                { path: '/settings', label: 'Solver & Config', icon: Settings }
               ].map(item => {
                 const Icon = item.icon;
-                const isActive = activeTab === item.id;
                 return (
-                  <button
-                    key={item.id}
-                    onClick={() => setActiveTab(item.id as typeof activeTab)}
-                    style={{
+                  <NavLink
+                    key={item.path}
+                    to={item.path}
+                    style={({ isActive }) => ({
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'space-between',
@@ -417,27 +416,33 @@ function ControlRoom({ token, onLogout }: { token: string; onLogout: () => void 
                       color: isActive ? '#1d4ed8' : '#475569',
                       fontWeight: isActive ? 700 : 500,
                       fontSize: 13,
+                      textDecoration: 'none',
+                      boxSizing: 'border-box',
                       cursor: 'pointer',
                       transition: 'all 0.15s ease'
-                    }}
+                    })}
                   >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                      <Icon size={16} color={isActive ? '#2563eb' : '#64748b'} />
-                      <span>{item.label}</span>
-                    </div>
-                    {item.badge !== undefined && (
-                      <span style={{
-                        padding: '2px 7px',
-                        borderRadius: 12,
-                        background: isActive ? '#dbeafe' : item.badgeColor ? `${item.badgeColor}15` : '#f1f5f9',
-                        color: isActive ? '#1e40af' : item.badgeColor || '#64748b',
-                        fontSize: 11,
-                        fontWeight: 700
-                      }}>
-                        {item.badge}
-                      </span>
+                    {({ isActive }) => (
+                      <>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                          <Icon size={16} color={isActive ? '#2563eb' : '#64748b'} />
+                          <span>{item.label}</span>
+                        </div>
+                        {item.badge !== undefined && (
+                          <span style={{
+                            padding: '2px 7px',
+                            borderRadius: 12,
+                            background: isActive ? '#dbeafe' : item.badgeColor ? `${item.badgeColor}15` : '#f1f5f9',
+                            color: isActive ? '#1e40af' : item.badgeColor || '#64748b',
+                            fontSize: 11,
+                            fontWeight: 700
+                          }}>
+                            {item.badge}
+                          </span>
+                        )}
+                      </>
                     )}
-                  </button>
+                  </NavLink>
                 );
               })}
             </nav>
@@ -513,131 +518,176 @@ function ControlRoom({ token, onLogout }: { token: string; onLogout: () => void 
             </div>
           )}
 
-          {activeTab === 'overview' && (
-            <OverviewView
-              totalTasks={totalTasks}
-              plans={plans}
-              tasks={tasks}
-              blocks={blocks}
-              conflicts={conflicts}
-              optStatus={optStatus}
-              optObjective={optObjective}
-              optimizing={optimizing}
-              onRunOptimizer={handleRunOptimizer}
-              onNavigateToConflicts={() => setActiveTab('conflicts')}
-            />
-          )}
-
-          {activeTab === 'map' && (
-            <div style={{ display: 'grid', gap: 20 }}>
-              <div>
-                <h1 style={{ margin: 0, fontSize: 24, fontWeight: 800, color: theme.text }}>
-                  Indian Railways Network Map & AI Route Analyzer
-                </h1>
-                <p style={{ margin: '4px 0 0', fontSize: 13, color: theme.textMuted }}>
-                  Live geospatial corridor view ({stations.length} stations, {sections.length} active corridor sections) with calibrated failure-risk ML engine.
-                </p>
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1.5fr) minmax(360px, 1fr)', gap: 20 }}>
-                <MapView
-                  stations={stations}
-                  sections={sections}
-                  selectedStation={selectedStation}
-                  onSelectStation={(s) => {
-                    setSelectedStation(s);
-                    setRouteFrom(s.code);
-                  }}
-                  routeAnalysis={routeAnalysis}
+          <Routes>
+            <Route path="overview" element={
+              <ErrorBoundary moduleName="Central Operations Overview">
+                <OverviewView
+                  totalTasks={totalTasks}
+                  plans={plans}
+                  tasks={tasks}
+                  blocks={blocks}
+                  conflicts={conflicts}
+                  optStatus={optStatus}
+                  optObjective={optObjective}
+                  optimizing={optimizing}
+                  onRunOptimizer={handleRunOptimizer}
+                  onNavigateToConflicts={() => navigate('/conflicts')}
                 />
+              </ErrorBoundary>
+            } />
 
-                <div style={{ display: 'grid', gap: 16 }}>
-                  {selectedStation && (
-                    <div style={cardStyle}>
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-                        <div>
-                          <span style={badgeStyle('rgba(56, 189, 248, 0.2)', theme.cyan)}>
-                            STATION JUNCTION INSPECTOR
-                          </span>
-                          <h3 style={{ margin: '6px 0 0', fontSize: 18, fontWeight: 800, color: theme.text }}>
-                            {selectedStation.name} ({selectedStation.code})
-                          </h3>
-                        </div>
-                        <div style={{ fontSize: 11, color: theme.textDim }}>
-                          Coordinates: {selectedStation.lat.toFixed(4)}, {selectedStation.lon.toFixed(4)}
-                        </div>
-                      </div>
+            <Route path="network" element={
+              <ErrorBoundary moduleName="Network Map & AI Route Analyzer">
+                <div style={{ display: 'grid', gap: 20 }}>
+                  <div>
+                    <h1 style={{ margin: 0, fontSize: 24, fontWeight: 800, color: theme.text }}>
+                      Indian Railways Network Map & AI Route Analyzer
+                    </h1>
+                    <p style={{ margin: '4px 0 0', fontSize: 13, color: theme.textMuted }}>
+                      Live geospatial corridor view ({stations.length} stations, {sections.length} active corridor sections) with calibrated failure-risk ML engine.
+                    </p>
+                  </div>
 
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, fontSize: 12 }}>
-                        <div style={{ padding: 10, background: theme.bg, borderRadius: 8 }}>
-                          <span style={{ color: theme.textDim, display: 'block', marginBottom: 2 }}>Connected Sections</span>
-                          <strong style={{ color: theme.text }}>
-                            {sections.filter(sec => sec.station_from === selectedStation.code || sec.station_to === selectedStation.code).length} Corridors
-                          </strong>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1.5fr) minmax(360px, 1fr)', gap: 20 }}>
+                    <MapView
+                      stations={stations}
+                      sections={sections}
+                      selectedStation={selectedStation}
+                      onSelectStation={(s) => {
+                        setSelectedStation(s);
+                        setRouteFrom(s.code);
+                      }}
+                      routeAnalysis={routeAnalysis}
+                    />
+
+                    <div style={{ display: 'grid', gap: 16 }}>
+                      {selectedStation && (
+                        <div style={cardStyle}>
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+                            <div>
+                              <span style={badgeStyle('rgba(56, 189, 248, 0.2)', theme.cyan)}>
+                                STATION JUNCTION INSPECTOR
+                              </span>
+                              <h3 style={{ margin: '6px 0 0', fontSize: 18, fontWeight: 800, color: theme.text }}>
+                                {selectedStation.name} ({selectedStation.code})
+                              </h3>
+                            </div>
+                            <div style={{ fontSize: 11, color: theme.textDim }}>
+                              Coordinates: {Number.isFinite(selectedStation.lat) ? selectedStation.lat.toFixed(4) : 'N/A'}, {Number.isFinite(selectedStation.lon) ? selectedStation.lon.toFixed(4) : 'N/A'}
+                            </div>
+                          </div>
+
+                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, fontSize: 12 }}>
+                            <div style={{ padding: 10, background: theme.bg, borderRadius: 8 }}>
+                              <span style={{ color: theme.textDim, display: 'block', marginBottom: 2 }}>Connected Sections</span>
+                              <strong style={{ color: theme.text }}>
+                                {sections.filter(sec => sec.station_from === selectedStation.code || sec.station_to === selectedStation.code).length} Corridors
+                              </strong>
+                            </div>
+                            <div style={{ padding: 10, background: theme.bg, borderRadius: 8 }}>
+                              <span style={{ color: theme.textDim, display: 'block', marginBottom: 2 }}>Pending Corridor Tasks</span>
+                              <strong style={{ color: theme.cyan }}>
+                                {plans.filter(p => (p.section_id || '').includes(selectedStation.code)).length} Scheduled Blocks
+                              </strong>
+                            </div>
+                          </div>
                         </div>
-                        <div style={{ padding: 10, background: theme.bg, borderRadius: 8 }}>
-                          <span style={{ color: theme.textDim, display: 'block', marginBottom: 2 }}>Pending Corridor Tasks</span>
-                          <strong style={{ color: theme.cyan }}>
-                            {plans.filter(p => (p.section_id || '').includes(selectedStation.code)).length} Scheduled Blocks
-                          </strong>
-                        </div>
-                      </div>
+                      )}
+
+                      <RouteAnalyzer
+                        stations={stations}
+                        token={token}
+                        fromStation={routeFrom}
+                        setFromStation={setRouteFrom}
+                        toStation={routeTo}
+                        setToStation={setRouteTo}
+                        routeAnalysis={routeAnalysis}
+                        setRouteAnalysis={setRouteAnalysis}
+                      />
                     </div>
-                  )}
-
-                  <RouteAnalyzer
-                    stations={stations}
-                    token={token}
-                    fromStation={routeFrom}
-                    setFromStation={setRouteFrom}
-                    toStation={routeTo}
-                    setToStation={setRouteTo}
-                    routeAnalysis={routeAnalysis}
-                    setRouteAnalysis={setRouteAnalysis}
-                  />
+                  </div>
                 </div>
-              </div>
-            </div>
-          )}
+              </ErrorBoundary>
+            } />
 
-          {activeTab === 'planning' && (
-            <PlanningView
-              plans={plans}
-              totalTasks={totalTasks}
-              blocksUsedCount={blocksUsedCount}
-              selectedHorizon={selectedHorizon}
-              setSelectedHorizon={setSelectedHorizon}
-              objectiveProfile={objectiveProfile}
-              setObjectiveProfile={setObjectiveProfile}
-              optStatus={optStatus}
-              optObjective={optObjective}
-              lastOptimizedAt={lastOptimizedAt}
-              optimizing={optimizing}
-              onRunOptimizer={handleRunOptimizer}
-              onApproveTask={handleApproveTask}
-              approvingTaskId={approvingTaskId}
-            />
-          )}
+            <Route path="map" element={<Navigate to="/network" replace />} />
 
-          {activeTab === 'tasks' && <TasksView tasks={tasks} />}
-          {activeTab === 'weekly' && <WeeklyView plans={plans} />}
-          {activeTab === 'monthly' && <MonthlyView goodsForecasts={goodsForecasts} />}
-          {activeTab === 'conflicts' && <ConflictsView conflicts={conflicts} />}
-          {activeTab === 'approval' && (
-            <ApprovalView
-              plans={plans}
-              approverName={approverName}
-              setApproverName={setApproverName}
-              approverRole={approverRole}
-              setApproverRole={setApproverRole}
-              approvalRemarks={approvalRemarks}
-              setApprovalRemarks={setApprovalRemarks}
-              onApproveTask={handleApproveTask}
-              approvingTaskId={approvingTaskId}
-            />
-          )}
-          {activeTab === 'integrations' && <IntegrationsView integrations={integrations} />}
-          {activeTab === 'settings' && <SettingsView modelHealth={modelHealth} />}
+            <Route path="planning" element={
+              <ErrorBoundary moduleName="Automatic Block Planning">
+                <PlanningView
+                  plans={plans}
+                  totalTasks={totalTasks}
+                  blocksUsedCount={blocksUsedCount}
+                  selectedHorizon={selectedHorizon}
+                  setSelectedHorizon={setSelectedHorizon}
+                  objectiveProfile={objectiveProfile}
+                  setObjectiveProfile={setObjectiveProfile}
+                  optStatus={optStatus}
+                  optObjective={optObjective}
+                  lastOptimizedAt={lastOptimizedAt}
+                  optimizing={optimizing}
+                  onRunOptimizer={handleRunOptimizer}
+                  onApproveTask={handleApproveTask}
+                  approvingTaskId={approvingTaskId}
+                />
+              </ErrorBoundary>
+            } />
+
+            <Route path="tasks" element={
+              <ErrorBoundary moduleName="Maintenance Tasks Repository">
+                <TasksView tasks={tasks} />
+              </ErrorBoundary>
+            } />
+
+            <Route path="weekly" element={
+              <ErrorBoundary moduleName="Weekly Corridor Schedule">
+                <WeeklyView plans={plans} />
+              </ErrorBoundary>
+            } />
+
+            <Route path="monthly" element={
+              <ErrorBoundary moduleName="Monthly Rolling Plan">
+                <MonthlyView goodsForecasts={goodsForecasts} />
+              </ErrorBoundary>
+            } />
+
+            <Route path="conflicts" element={
+              <ErrorBoundary moduleName="Conflicts & Operational Alerts">
+                <ConflictsView conflicts={conflicts} />
+              </ErrorBoundary>
+            } />
+
+            <Route path="approval" element={
+              <ErrorBoundary moduleName="Possession Sign-Off Desk">
+                <ApprovalView
+                  plans={plans}
+                  approverName={approverName}
+                  setApproverName={setApproverName}
+                  approverRole={approverRole}
+                  setApproverRole={setApproverRole}
+                  approvalRemarks={approvalRemarks}
+                  setApprovalRemarks={setApprovalRemarks}
+                  onApproveTask={handleApproveTask}
+                  approvingTaskId={approvingTaskId}
+                />
+              </ErrorBoundary>
+            } />
+
+            <Route path="integrations" element={
+              <ErrorBoundary moduleName="Railway IT Data Integrations">
+                <IntegrationsView integrations={integrations} />
+              </ErrorBoundary>
+            } />
+
+            <Route path="settings" element={
+              <ErrorBoundary moduleName="System Settings & Model Card">
+                <SettingsView modelHealth={modelHealth} />
+              </ErrorBoundary>
+            } />
+
+            <Route path="" element={<Navigate to="/overview" replace />} />
+            <Route path="*" element={<Navigate to="/overview" replace />} />
+          </Routes>
         </main>
       </div>
     </div>
@@ -655,7 +705,7 @@ export default function App() {
       <Routes>
         <Route
           path="/login"
-          element={token ? <Navigate to="/" /> : <Login setToken={setToken} />}
+          element={token ? <Navigate to="/overview" replace /> : <Login setToken={setToken} />}
         />
         <Route
           path="/*"
@@ -669,7 +719,7 @@ export default function App() {
                 }}
               />
             ) : (
-              <Navigate to="/login" />
+              <Navigate to="/login" replace />
             )
           }
         />

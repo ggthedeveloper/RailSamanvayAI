@@ -137,17 +137,25 @@ export interface RouteAnalysisResult {
   factors_increasing_risk: string[];
   factors_reducing_risk: string[];
   summary: string;
+  prediction_mode?: string;
+  telemetry_source?: string;
 }
 
 export interface ModelHealth {
   version?: string;
   primary_target?: string;
   split_method?: string;
+  status?: string;
+  model_file?: string;
+  artifact_exists?: boolean;
+  model_type?: string;
+  provenance?: string;
+  is_production_validated?: boolean;
+  features_expected?: number;
   metrics?: {
     pr_auc?: number;
     recall?: number;
     precision?: number;
     brier_score?: number;
   };
-  status?: string;
 }

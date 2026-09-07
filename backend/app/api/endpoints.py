@@ -19,6 +19,54 @@ import uuid
 
 router = APIRouter()
 
+def get_project_root() -> str:
+    if os.getenv("PROJECT_ROOT"):
+        return os.path.abspath(os.getenv("PROJECT_ROOT"))
+    return os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+
+CANONICAL_FEATURES = [
+    'condition_score',
+    'days_since_maintenance',
+    'defect_history',
+    'traffic_load',
+    'age_days',
+    'is_safety_critical',
+    'dept_eng',
+    'dept_smt',
+    'dept_trd',
+    'overdue_days'
+]
+
+def build_canonical_features(
+    condition_score: float,
+    days_since_maintenance: int,
+    defect_history: int,
+    traffic_load: int,
+    age_days: int,
+    is_safety_critical: int,
+    department: str,
+    overdue_days: int
+) -> pd.DataFrame:
+    dept_upper = (department or "ENGINEERING").upper()
+    dept_eng = 1 if dept_upper in ["ENGINEERING", "ENG", "CIVIL", "TRACK"] else 0
+    dept_smt = 1 if dept_upper in ["SMT", "S&T", "SIGNAL", "SIGNALLING", "TELECOM"] else 0
+    dept_trd = 1 if dept_upper in ["TRD", "OHE", "ELECTRICAL", "TRD/OHE"] else 0
+    if not (dept_eng or dept_smt or dept_trd):
+        dept_eng = 1
+
+    feature_dict = {
+        'condition_score': float(condition_score),
+        'days_since_maintenance': int(days_since_maintenance),
+        'defect_history': int(defect_history),
+        'traffic_load': int(traffic_load),
+        'age_days': int(age_days),
+        'is_safety_critical': int(is_safety_critical),
+        'dept_eng': int(dept_eng),
+        'dept_smt': int(dept_smt),
+        'dept_trd': int(dept_trd),
+        'overdue_days': int(overdue_days)
+    }
+    return pd.DataFrame([feature_dict])[CANONICAL_FEATURES]
 
 class StationCreate(BaseModel):
     code: str
@@ -27,8 +75,10 @@ class StationCreate(BaseModel):
     lon: float
 
 class RouteAnalysisRequest(BaseModel):
-    station_from: str
-    station_to: str
+    station_from: Optional[str] = None
+    station_to: Optional[str] = None
+    from_station: Optional[str] = None
+    to_station: Optional[str] = None
     asset_type: Optional[str] = "TRACK" # TRACK, POINT, SIGNAL, OHE_MAST
     department: Optional[str] = "ENGINEERING" # ENGINEERING, SMT, TRD
     condition_score: Optional[float] = Field(0.55, ge=0.0, le=1.0)
@@ -72,15 +122,18 @@ def get_sections(db: Session = Depends(get_db)):
     return db.query(Section).all()
 
 @router.post("/routes/analyze")
+@router.post("/route/analyze")
 def analyze_route(req: RouteAnalysisRequest, db: Session = Depends(get_db)):
-    st_from = db.query(Station).filter(Station.code == req.station_from.upper()).first()
-    st_to = db.query(Station).filter(Station.code == req.station_to.upper()).first()
+    st_from_code = (req.station_from or req.from_station or "NDLS").upper()
+    st_to_code = (req.station_to or req.to_station or "MTJ").upper()
+    st_from = db.query(Station).filter(Station.code == st_from_code).first()
+    st_to = db.query(Station).filter(Station.code == st_to_code).first()
     
     if not st_from:
-        raise HTTPException(status_code=404, detail=f"Origin station '{req.station_from}' not found.")
+        raise HTTPException(status_code=404, detail=f"Origin station '{st_from_code}' not found.")
     if not st_to:
-        raise HTTPException(status_code=404, detail=f"Destination station '{req.station_to}' not found.")
-    if req.station_from.upper() == req.station_to.upper():
+        raise HTTPException(status_code=404, detail=f"Destination station '{st_to_code}' not found.")
+    if st_from_code == st_to_code:
         raise HTTPException(status_code=400, detail="Origin and Destination stations must be different.")
     
     # Calculate distance
@@ -94,59 +147,68 @@ def analyze_route(req: RouteAnalysisRequest, db: Session = Depends(get_db)):
         db.add(existing_sec)
         db.commit()
     
-    # Prepare feature vector for ML model
-    # Features: ['condition_score', 'days_since_maintenance', 'defect_history', 'traffic_load', 'age_days', 'is_safety_critical', 'dept_eng', 'dept_smt', 'dept_trd', 'overdue_days']
-    dept_eng = 1 if req.department.upper() == "ENGINEERING" else 0
-    dept_smt = 1 if req.department.upper() in ["SMT", "S&T"] else 0
-    dept_trd = 1 if req.department.upper() in ["TRD", "OHE", "TRD/OHE"] else 0
-    if not (dept_eng or dept_smt or dept_trd):
-        dept_eng = 1 # fallback
-        
-    age_days = 1825 # default 5 years
-    is_safety_critical = 1 if req.safety_critical else 0
-    
-    feature_dict = {
-        'condition_score': req.condition_score,
-        'days_since_maintenance': req.days_since_maintenance,
-        'defect_history': req.defect_history,
-        'traffic_load': req.traffic_load,
-        'age_days': age_days,
-        'is_safety_critical': is_safety_critical,
-        'dept_eng': dept_eng,
-        'dept_smt': dept_smt,
-        'dept_trd': dept_trd,
-        'overdue_days': req.overdue_days
-    }
-    
-    X_input = pd.DataFrame([feature_dict])
-    
-    # Load ML model
-    model_path = "ml/models/calibrated_rf.joblib"
+    # Check if real asset telemetry exists for this corridor section
+    matched_asset = db.query(Asset).filter(Asset.section_id == section_id).first()
+
+    telemetry_source = "User-submitted parameters"
+    cond_score = req.condition_score if req.condition_score is not None else 0.55
+    days_since_maint = req.days_since_maintenance if req.days_since_maintenance is not None else 180
+    overdue = req.overdue_days if req.overdue_days is not None else 14
+    traffic = req.traffic_load if req.traffic_load is not None else 120
+    defects = req.defect_history if req.defect_history is not None else 3
+    is_crit = 1 if req.safety_critical else 0
+
+    if matched_asset and matched_asset.condition_score is not None:
+        telemetry_source = f"Observed asset {matched_asset.id} telemetry"
+        cond_score = float(matched_asset.condition_score) / 100.0 if matched_asset.condition_score > 1.0 else float(matched_asset.condition_score)
+        if matched_asset.criticality_class:
+            is_crit = 1 if matched_asset.criticality_class.upper() in ["HIGH", "CRITICAL"] else 0
+
+    age_days = 1825 # standard 5-year asset baseline
+    X_input = build_canonical_features(
+        condition_score=cond_score,
+        days_since_maintenance=days_since_maint,
+        defect_history=defects,
+        traffic_load=traffic,
+        age_days=age_days,
+        is_safety_critical=is_crit,
+        department=req.department or "ENGINEERING",
+        overdue_days=overdue
+    )
+
+    root = get_project_root()
+    model_path = os.path.join(root, "ml", "models", "calibrated_rf.joblib")
     if not os.path.exists(model_path):
-        model_path = "../ml/models/calibrated_rf.joblib"
-    
-    risk_probability = 0.5
+        model_path = os.path.join(root, "..", "ml", "models", "calibrated_rf.joblib")
+
+    model_available = False
+    prediction_mode = "rule_based"
+    model_reason = "No model artifact loaded; using deterministic safety rules."
+    risk_probability = float(np.clip((1.0 - cond_score) * 0.7 + (overdue / 30.0) * 0.3, 0.05, 0.98))
+
     if os.path.exists(model_path):
         try:
             model = joblib.load(model_path)
             probs = model.predict_proba(X_input)[0]
-            # Prob of failure class (1)
             risk_probability = float(probs[1]) if len(probs) > 1 else float(probs[0])
+            model_available = True
+            prediction_mode = "calibrated_random_forest"
+            model_reason = "Evaluated using Calibrated Random Forest artifact (baseline training distribution)."
         except Exception as e:
-            # Fallback heuristic calculation
-            risk_probability = float(np.clip((1.0 - req.condition_score) * 0.7 + (req.overdue_days / 30.0) * 0.3, 0.05, 0.98))
-    else:
-        risk_probability = float(np.clip((1.0 - req.condition_score) * 0.7 + (req.overdue_days / 30.0) * 0.3, 0.05, 0.98))
-    
+            model_available = False
+            prediction_mode = "rule_based"
+            model_reason = f"Model execution error: {str(e)}; fell back to deterministic rules."
+            risk_probability = float(np.clip((1.0 - cond_score) * 0.7 + (overdue / 30.0) * 0.3, 0.05, 0.98))
+
     # Decision Logic
-    block_required = bool(risk_probability >= 0.40 or req.overdue_days >= 10 or req.condition_score < 0.65 or req.safety_critical and req.overdue_days > 0)
+    block_required = bool(risk_probability >= 0.40 or overdue >= 10 or cond_score < 0.65 or (is_crit == 1 and overdue > 0))
     
-    if risk_probability >= 0.75 or (req.safety_critical and req.overdue_days >= 15):
+    if risk_probability >= 0.75 or (is_crit == 1 and overdue >= 15):
         priority_class = "P1 (Critical / Urgent Review)"
         verdict = "URGENT BLOCK REQUIRED"
         recommended_window = "Next Available Window (01:00 - 04:30 Midnight)"
         duration_min = 180
-    elif risk_probability >= 0.45 or req.overdue_days >= 7:
+    elif risk_probability >= 0.45 or overdue >= 7:
         priority_class = "P2 (High Priority)"
         verdict = "SCHEDULED BLOCK REQUIRED"
         recommended_window = "Upcoming 7-Day Window (12:30 - 15:00 Non-Peak)"
@@ -166,32 +228,33 @@ def analyze_route(req: RouteAnalysisRequest, db: Session = Depends(get_db)):
     factors_positive = []
     factors_negative = []
     
-    if req.condition_score < 0.65:
-        factors_positive.append(f"Degraded asset condition score ({req.condition_score:.2f} / 1.00)")
+    if cond_score < 0.65:
+        factors_positive.append(f"Degraded asset condition score ({cond_score:.2f} / 1.00)")
     else:
-        factors_negative.append(f"Stable asset condition score ({req.condition_score:.2f} / 1.00)")
+        factors_negative.append(f"Stable asset condition score ({cond_score:.2f} / 1.00)")
         
-    if req.overdue_days > 0:
-        factors_positive.append(f"Maintenance task overdue by {req.overdue_days} days")
+    if overdue > 0:
+        factors_positive.append(f"Maintenance task overdue by {overdue} days")
     else:
         factors_negative.append("Up-to-date maintenance interval")
         
-    if req.traffic_load > 100:
-        factors_positive.append(f"Heavy corridor traffic exposure ({req.traffic_load} trains/day)")
+    if traffic > 100:
+        factors_positive.append(f"Heavy corridor traffic exposure ({traffic} trains/day)")
         
-    if req.safety_critical:
+    if is_crit == 1:
         factors_positive.append("Asset flagged as Safety-Critical infrastructure")
 
-    if req.defect_history >= 2:
-        factors_positive.append(f"Recurrent defect history ({req.defect_history} reported incidents)")
+    if defects >= 2:
+        factors_positive.append(f"Recurrent defect history ({defects} reported incidents)")
 
-    departments_involved = [req.department.upper()]
+    departments_involved = [(req.department or "ENGINEERING").upper()]
     if block_required:
-        # Cross-department bundling opportunity
-        if req.department.upper() == "ENGINEERING":
+        if (req.department or "").upper() == "ENGINEERING":
             departments_involved.append("S&T (Track Circuit Clearance)")
-        elif req.department.upper() == "TRD":
+        elif (req.department or "").upper() in ["TRD", "OHE"]:
             departments_involved.append("ENGINEERING (OHE Mast Footing Inspection)")
+
+    method_label = "Baseline ML Model" if model_available else "Deterministic Safety Heuristic"
 
     return {
         "section_id": section_id,
@@ -208,7 +271,11 @@ def analyze_route(req: RouteAnalysisRequest, db: Session = Depends(get_db)):
         "departments_involved": departments_involved,
         "factors_increasing_risk": factors_positive,
         "factors_reducing_risk": factors_negative,
-        "summary": f"Route {st_from.name} ({st_from.code}) -> {st_to.name} ({st_to.code}) [{distance_km} km]: {verdict} with {round(risk_probability * 100, 1)}% failure risk probability under {priority_class} classification."
+        "model_available": model_available,
+        "prediction_mode": prediction_mode,
+        "model_reason": model_reason,
+        "telemetry_source": telemetry_source,
+        "summary": f"Route {st_from.name} ({st_from.code}) -> {st_to.name} ({st_to.code}) [{distance_km} km]: {verdict} with {round(risk_probability * 100, 1)}% risk score under {priority_class} classification via {method_label}."
     }
 
 @router.get("/assets")
@@ -251,6 +318,7 @@ class PlanGenerateRequest(BaseModel):
     horizon: Optional[str] = "weekly"  # "weekly" or "monthly"
     timeout_seconds: Optional[int] = 30
     objective_profile: Optional[str] = "safety_first"  # "safety_first", "balanced", "throughput"
+    anchor_date: Optional[str] = "2026-09-08"
 
 class PlanApprovalRequest(BaseModel):
     task_id: Optional[str] = None
@@ -312,24 +380,38 @@ def get_optimized_plan(db: Session = Depends(get_db)):
 
     return records
 
-def load_real_demands_and_blocks(root: str, horizon_mode: str = "weekly"):
+def load_real_demands_and_blocks(root: str, horizon_mode: str = "weekly", anchor_date_str: Optional[str] = None):
     from datetime import datetime, timedelta
     raw_dir = os.path.join(root, "data", "raw")
-    alt_raw_dir = "C:\\Users\\User\\OneDrive\\Desktop\\Datasets SIH 2026"
-    if not os.path.exists(os.path.join(raw_dir, "corridor_availability_india.csv")) and os.path.exists(alt_raw_dir):
-        raw_dir = alt_raw_dir
+
+    # Anchor date resolution
+    anchor_date = "2026-09-08"
+    if anchor_date_str:
+        try:
+            datetime.strptime(anchor_date_str.strip()[:10], "%Y-%m-%d")
+            anchor_date = anchor_date_str.strip()[:10]
+        except Exception:
+            anchor_date = "2026-09-08"
+
+    anchor_dt = datetime.strptime(anchor_date, "%Y-%m-%d")
+    horizon_days = 7 if horizon_mode == "weekly" else 30
+    end_dt = anchor_dt + timedelta(days=horizon_days)
+    anchor_start = anchor_dt.strftime("%Y-%m-%d")
+    anchor_end = end_dt.strftime("%Y-%m-%d")
 
     tasks_path = os.path.join(raw_dir, "maintenance_tasks.csv")
     assets_path = os.path.join(raw_dir, "assets.csv")
     blocks_path = os.path.join(raw_dir, "corridor_availability_india.csv")
     requests_path = os.path.join(raw_dir, "block_requests_india.csv")
     forecast_path = os.path.join(raw_dir, "goods_train_forecast.csv")
+    corridor_ref_path = os.path.join(raw_dir, "corridor_reference.csv")
 
     tasks_df = pd.read_csv(tasks_path) if os.path.exists(tasks_path) else pd.DataFrame()
     assets_df = pd.read_csv(assets_path) if os.path.exists(assets_path) else pd.DataFrame()
     blocks_raw = pd.read_csv(blocks_path) if os.path.exists(blocks_path) else pd.DataFrame()
     requests_raw = pd.read_csv(requests_path) if os.path.exists(requests_path) else pd.DataFrame()
     forecast_df = pd.read_csv(forecast_path) if os.path.exists(forecast_path) else pd.DataFrame()
+    corridor_ref_df = pd.read_csv(corridor_ref_path) if os.path.exists(corridor_ref_path) else pd.DataFrame()
 
     corr_map = dict(zip(assets_df['corridor_id'], assets_df['corridor_name'])) if 'corridor_id' in assets_df else {}
     corr_alias = {
@@ -341,7 +423,11 @@ def load_real_demands_and_blocks(root: str, horizon_mode: str = "weekly"):
         'BJU-KIR': 'HWH-NJP',
         'KIR-NJP': 'HWH-NJP',
     }
-    density_map = dict(zip(forecast_df['corridor_id'], forecast_df['density_tier'])) if 'density_tier' in forecast_df else {}
+    density_map = {}
+    if 'density_tier' in forecast_df and 'corridor_id' in forecast_df:
+        density_map.update(dict(zip(forecast_df['corridor_id'], forecast_df['density_tier'])))
+    if 'density_tier' in corridor_ref_df and 'corridor_id' in corridor_ref_df:
+        density_map.update(dict(zip(corridor_ref_df['corridor_id'], corridor_ref_df['density_tier'])))
 
     demand = []
 
@@ -353,7 +439,7 @@ def load_real_demands_and_blocks(root: str, horizon_mode: str = "weekly"):
         crit = str(row.get('criticality', 'Medium')).upper() == 'CRITICAL'
         p_class = 'P1' if crit else ('P2' if str(row.get('criticality', '')).upper() == 'HIGH' else 'P3')
         dept_raw = str(row.get('department', 'Engineering')).upper()
-        if dept_raw in ['SIGNALLING', 'TELECOM', 'S&T']:
+        if dept_raw in ['SIGNALLING', 'TELECOM', 'S&T', 'SMT']:
             dept = 'SMT'
         elif dept_raw in ['ELECTRICAL', 'TRD', 'OHE']:
             dept = 'TRD'
@@ -362,6 +448,15 @@ def load_real_demands_and_blocks(root: str, horizon_mode: str = "weekly"):
 
         dur = min(int(row.get('estimated_duration_hours', 2)) * 60, 240)
         p_score = int(row.get('priority_score', 80))
+
+        # Dynamically compute overdue days from source last_due_date vs planning anchor
+        overdue_days = 0
+        if 'last_due_date' in row and pd.notna(row['last_due_date']):
+            try:
+                due_dt = pd.to_datetime(row['last_due_date'])
+                overdue_days = max(0, (anchor_dt - due_dt).days)
+            except Exception:
+                overdue_days = 0
 
         demand.append({
             'task_id': str(row['task_id']),
@@ -373,7 +468,7 @@ def load_real_demands_and_blocks(root: str, horizon_mode: str = "weekly"):
             'priority_score': p_score,
             'required_duration_min': dur,
             'safety_critical': crit,
-            'overdue_days': 14 if crit else 5,
+            'overdue_days': overdue_days,
             'source': 'TMS/SMMS/TDMS',
             'crew_type': 'Track Relaying Train (TRT)' if dept == 'ENGINEERING' else ('Tower Wagon Gang' if dept == 'TRD' else 'S&T Relay Gang')
         })
@@ -386,24 +481,32 @@ def load_real_demands_and_blocks(root: str, horizon_mode: str = "weekly"):
         valid_reqs['end_dt'] = pd.to_datetime(valid_reqs['requested_end'], errors='coerce')
         valid_reqs['dur_min'] = ((valid_reqs['end_dt'] - valid_reqs['start_dt']).dt.total_seconds() / 60).fillna(120).astype(int)
 
-        max_req_days = 7 if horizon_mode == "weekly" else 30
         max_req_count = 70 if horizon_mode == "weekly" else 180
         horizon_reqs = valid_reqs[
-            (valid_reqs['req_date'] >= '2026-01-01') & 
-            (valid_reqs['req_date'] <= f'2026-01-{max_req_days:02d}')
+            (valid_reqs['req_date'] >= anchor_start) & 
+            (valid_reqs['req_date'] <= anchor_end)
         ].head(max_req_count)
 
         for _, row in horizon_reqs.iterrows():
             dept_raw = str(row['department']).upper()
-            if dept_raw == 'TRACTION':
+            if dept_raw in ['TRACTION', 'TRD', 'OHE']:
                 dept = 'TRD'
-            elif dept_raw == 'ENGINEERING':
+            elif dept_raw in ['ENGINEERING', 'CIVIL', 'TRACK']:
                 dept = 'ENGINEERING'
             else:
                 dept = 'SMT'
 
             is_crit = any(k in str(row['block_type']) for k in ['Renewal', 'Power', 'Interlocking'])
             dur = max(30, min(int(row['dur_min']), 240))
+            
+            # Dynamic overdue calculation for request start
+            req_overdue = 0
+            if pd.notna(row['start_dt']):
+                try:
+                    req_overdue = max(0, (anchor_dt - row['start_dt']).days)
+                except Exception:
+                    req_overdue = 0
+
             demand.append({
                 'task_id': f"{row['request_id']}_{row['task_id']}",
                 'asset_id': f"AST_{row['corridor_id'][:4]}_{row['task_id'][-4:]}",
@@ -414,7 +517,7 @@ def load_real_demands_and_blocks(root: str, horizon_mode: str = "weekly"):
                 'priority_score': 85 if is_crit else 70,
                 'required_duration_min': dur,
                 'safety_critical': is_crit,
-                'overdue_days': 8 if is_crit else 2,
+                'overdue_days': req_overdue,
                 'source': 'BDMS',
                 'crew_type': 'Mechanized Tamping Crew' if dept == 'ENGINEERING' else ('OHE Wiring Depot' if dept == 'TRD' else 'Signal Testing Gang')
             })
@@ -430,10 +533,9 @@ def load_real_demands_and_blocks(root: str, horizon_mode: str = "weekly"):
         except Exception:
             return 180
 
-    max_block_days = 7 if horizon_mode == "weekly" else 30
     blocks_df = blocks_raw[
-        (blocks_raw['date'] >= '2026-01-01') & 
-        (blocks_raw['date'] <= f'2026-01-{max_block_days:02d}')
+        (blocks_raw['date'] >= anchor_start) & 
+        (blocks_raw['date'] <= anchor_end)
     ].copy()
     blocks_df['max_duration_min'] = blocks_df.apply(parse_dur, axis=1)
     blocks_df['block_id'] = [f"BLK_{r['corridor_id']}_{str(r['date'])[-5:].replace('-', '')}_{i}" for i, r in blocks_df.reset_index().iterrows()]
@@ -448,14 +550,18 @@ def generate_plan(req: PlanGenerateRequest = PlanGenerateRequest(), db: Session 
     root = get_project_root()
     out_csv = os.path.join(root, "data", "processed", "optimized_plan.csv")
     horizon_mode = (req.horizon or "weekly").lower()
+    anchor_date = req.anchor_date or "2026-09-08"
 
-    tasks_df, blocks_df, density_map = load_real_demands_and_blocks(root, horizon_mode)
+    tasks_df, blocks_df, density_map = load_real_demands_and_blocks(root, horizon_mode, anchor_date)
 
     if len(tasks_df) == 0 or len(blocks_df) == 0:
-        raise HTTPException(status_code=400, detail="Insufficient realistic tasks or block windows to optimize.")
+        raise HTTPException(
+            status_code=400,
+            detail=f"Insufficient realistic tasks ({len(tasks_df)}) or block windows ({len(blocks_df)}) to optimize for horizon '{horizon_mode}' starting '{anchor_date}'."
+        )
 
     is_fallback = False
-    status_text = "OPTIMAL"
+    status_text = "UNKNOWN"
     objective_val = 0.0
     plan = []
     blocks_used = set()
@@ -472,6 +578,13 @@ def generate_plan(req: PlanGenerateRequest = PlanGenerateRequest(), db: Session 
                     continue
                 if int(task["required_duration_min"]) > int(block["max_duration_min"]):
                     continue
+
+                # Power isolation constraint check
+                block_power = str(block.get("power_isolation_required", "No")).lower() in ["yes", "true", "1"]
+                task_needs_power = task["department"] == "TRD" or "power" in str(task.get("task_type", "")).lower()
+                if task_needs_power and not block_power and "no power block" in str(block.get("restriction", "")).lower():
+                    continue
+
                 x[(t_idx, b_idx)] = model.NewBoolVar(f"x_{t_idx}_{b_idx}")
 
         if len(x) > 0:
@@ -546,7 +659,13 @@ def generate_plan(req: PlanGenerateRequest = PlanGenerateRequest(), db: Session 
                     # Determine if joint possession (2 different departments)
                     assigned_depts = [tasks_df.loc[t_idx, "department"] for t_idx in assigned_t_indices]
                     is_joint = len(assigned_t_indices) >= 2 and len(set(assigned_depts)) >= 2
-                    downtime_saved = 180 if is_joint else 0
+                    
+                    # Calculated downtime saved based on actual overlap
+                    assigned_durs = [int(tasks_df.loc[t_idx, "required_duration_min"]) for t_idx in assigned_t_indices]
+                    if is_joint and len(assigned_durs) >= 2:
+                        downtime_saved = max(0, sum(assigned_durs) - max(assigned_durs))
+                    else:
+                        downtime_saved = 0
 
                     for t_idx in assigned_t_indices:
                         tsk = tasks_df.loc[t_idx]
@@ -584,9 +703,12 @@ def generate_plan(req: PlanGenerateRequest = PlanGenerateRequest(), db: Session 
                             "planning_status": status_text,
                             "approval_status": "PENDING_APPROVAL",
                             "approved_by": "Chief Controller",
-                            "solver": "Google OR-Tools CP-SAT"
+                            "solver": "Google OR-Tools CP-SAT",
+                            "why_selected": f"Priority {tsk['priority']} ({tsk['priority_score']} pts), overdue {tsk['overdue_days']}d. Allocated to window {blk['available_start']}-{blk['available_end']} on {blk['date']}.",
+                            "synergy_explanation": f"Bundled with {bundled_with_str}; saves {downtime_saved} min line closure." if is_joint else "Independent corridor block."
                         })
             else:
+                status_text = "INFEASIBLE"
                 is_fallback = True
         else:
             is_fallback = True
@@ -624,6 +746,10 @@ def generate_plan(req: PlanGenerateRequest = PlanGenerateRequest(), db: Session 
             if assigned_block is not None:
                 b_id = str(assigned_block["block_id"])
                 blocks_used.add(b_id)
+                assigned_durs = [int(t["required_duration_min"]) for t in usage["tasks"]]
+                is_joint = len(usage["tasks"]) >= 2 and len(set(t["department"] for t in usage["tasks"])) >= 2
+                downtime_saved = max(0, sum(assigned_durs) - max(assigned_durs)) if is_joint else 0
+
                 plan.append({
                     "task_id": str(task["task_id"]),
                     "asset_id": str(task["asset_id"]),
@@ -642,17 +768,19 @@ def generate_plan(req: PlanGenerateRequest = PlanGenerateRequest(), db: Session 
                     "duration": req_min,
                     "overdue_days": int(task["overdue_days"]),
                     "safety_critical": bool(task["safety_critical"]),
-                    "is_joint_possession": len(block_usage[b_id]["tasks"]) >= 2,
-                    "coordination_status": "JOINT_POSSESSION" if len(block_usage[b_id]["tasks"]) >= 2 else "INDEPENDENT",
-                    "bundled_with": "Co-scheduled during fallback",
-                    "downtime_saved_min": 180 if len(block_usage[b_id]["tasks"]) >= 2 else 0,
+                    "is_joint_possession": is_joint,
+                    "coordination_status": "JOINT_POSSESSION" if is_joint else "INDEPENDENT",
+                    "bundled_with": "Co-scheduled during fallback" if len(usage["tasks"]) >= 2 else "None (Single Task)",
+                    "downtime_saved_min": downtime_saved,
                     "freight_density": density_map.get(str(assigned_block["corridor_id"]), "Medium"),
                     "power_isolation_required": str(assigned_block.get("power_isolation_required", "No")),
                     "restrictions": str(assigned_block.get("restriction", "Standard night maintenance block")),
                     "planning_status": "FALLBACK",
                     "approval_status": "PENDING_APPROVAL",
                     "approved_by": "Chief Controller",
-                    "solver": "Fail-Safe Greedy Heuristic"
+                    "solver": "Fail-Safe Greedy Heuristic",
+                    "why_selected": "Allocated by greedy priority fallback.",
+                    "synergy_explanation": f"Heuristic co-scheduling; saves {downtime_saved} min closure." if is_joint else "Single task possession."
                 })
 
     # Save generated plan to CSV
@@ -781,23 +909,66 @@ def get_conflicts(db: Session = Depends(get_db)):
 
 @router.get("/data-integrations/status")
 def get_data_integrations(db: Session = Depends(get_db)):
-    # Query live counts
-    tms_assets = db.query(Asset).filter(Asset.department_id == "ENGINEERING").count()
-    tms_tasks = db.query(MaintenanceTask).filter(MaintenanceTask.department_id == "ENGINEERING").count()
-
-    smt_assets = db.query(Asset).filter(Asset.department_id.in_(["SMT", "S&T"])).count()
-    smt_tasks = db.query(MaintenanceTask).filter(MaintenanceTask.department_id.in_(["SMT", "S&T"])).count()
-
-    trd_assets = db.query(Asset).filter(Asset.department_id.in_(["TRD", "OHE"])).count()
-    trd_tasks = db.query(MaintenanceTask).filter(MaintenanceTask.department_id.in_(["TRD", "OHE"])).count()
-
-    coa_blocks = db.query(BlockWindow).count()
-    coa_trains = db.query(TrainMovement).count()
-
-    bdms_history = db.query(MaintenanceHistory).count()
-    goods_fc_count = db.query(GoodsTrainForecast).count()
-
+    import time
     now_str = datetime.now().strftime("%Y-%m-%d %H:%M IST")
+
+    # 1. TMS (Track Management System)
+    t0 = time.perf_counter()
+    try:
+        tms_assets = db.query(Asset).filter(Asset.department_id == "ENGINEERING").count()
+        tms_tasks = db.query(MaintenanceTask).filter(MaintenanceTask.department_id == "ENGINEERING").count()
+        tms_lat = max(1.0, round((time.perf_counter() - t0) * 1000, 1))
+        tms_status = "CONNECTED" if (tms_assets + tms_tasks) > 0 else "READY"
+    except Exception:
+        tms_assets, tms_tasks, tms_lat, tms_status = 0, 0, 0.0, "UNAVAILABLE"
+
+    # 2. SMMS (Signalling Maintenance & Management System)
+    t0 = time.perf_counter()
+    try:
+        smt_assets = db.query(Asset).filter(Asset.department_id.in_(["SMT", "S&T"])).count()
+        smt_tasks = db.query(MaintenanceTask).filter(MaintenanceTask.department_id.in_(["SMT", "S&T"])).count()
+        smt_lat = max(1.0, round((time.perf_counter() - t0) * 1000, 1))
+        smt_status = "CONNECTED" if (smt_assets + smt_tasks) > 0 else "READY"
+    except Exception:
+        smt_assets, smt_tasks, smt_lat, smt_status = 0, 0, 0.0, "UNAVAILABLE"
+
+    # 3. TDMS (Traction Distribution Management System)
+    t0 = time.perf_counter()
+    try:
+        trd_assets = db.query(Asset).filter(Asset.department_id.in_(["TRD", "OHE"])).count()
+        trd_tasks = db.query(MaintenanceTask).filter(MaintenanceTask.department_id.in_(["TRD", "OHE"])).count()
+        trd_lat = max(1.0, round((time.perf_counter() - t0) * 1000, 1))
+        trd_status = "CONNECTED" if (trd_assets + trd_tasks) > 0 else "READY"
+    except Exception:
+        trd_assets, trd_tasks, trd_lat, trd_status = 0, 0, 0.0, "UNAVAILABLE"
+
+    # 4. COA (Control Office Application)
+    t0 = time.perf_counter()
+    try:
+        coa_blocks = db.query(BlockWindow).count()
+        coa_trains = db.query(TrainMovement).count()
+        coa_lat = max(1.0, round((time.perf_counter() - t0) * 1000, 1))
+        coa_status = "CONNECTED" if (coa_blocks + coa_trains) > 0 else "READY"
+    except Exception:
+        coa_blocks, coa_trains, coa_lat, coa_status = 0, 0, 0.0, "UNAVAILABLE"
+
+    # 5. BDMS (Block Demand & Management System)
+    t0 = time.perf_counter()
+    try:
+        bdms_history = db.query(MaintenanceHistory).count()
+        bdms_lat = max(1.0, round((time.perf_counter() - t0) * 1000, 1))
+        bdms_status = "CONNECTED" if bdms_history > 0 else "READY"
+    except Exception:
+        bdms_history, bdms_lat, bdms_status = 0, 0.0, "UNAVAILABLE"
+
+    # 6. FOIS / Freight Forecast Engine
+    t0 = time.perf_counter()
+    try:
+        goods_fc_count = db.query(GoodsTrainForecast).count()
+        goods_lat = max(1.0, round((time.perf_counter() - t0) * 1000, 1))
+        goods_status = "CONNECTED" if goods_fc_count > 0 else "READY"
+    except Exception:
+        goods_fc_count, goods_lat, goods_status = 0, 0.0, "UNAVAILABLE"
 
     return {
         "integrations": [
@@ -805,11 +976,11 @@ def get_data_integrations(db: Session = Depends(get_db)):
                 "id": "tms",
                 "name": "Track Management System (TMS)",
                 "department": "Engineering / Permanent Way",
-                "status": "Connected (Live DB)",
+                "status": tms_status,
                 "record_count": tms_assets + tms_tasks,
                 "detail": f"{tms_assets} Track Assets, {tms_tasks} Pending Work Tasks",
                 "last_sync": now_str,
-                "latency_ms": 42,
+                "latency_ms": tms_lat,
                 "feed_type": "Relational Sync",
                 "protocol": "REST / JDBC"
             },
@@ -817,11 +988,11 @@ def get_data_integrations(db: Session = Depends(get_db)):
                 "id": "smms",
                 "name": "Signalling Maintenance & Management System (SMMS)",
                 "department": "Signal & Telecommunication (S&T)",
-                "status": "Connected (Live DB)",
+                "status": smt_status,
                 "record_count": smt_assets + smt_tasks,
                 "detail": f"{smt_assets} Interlocking/Signal Assets, {smt_tasks} Inspection Tasks",
                 "last_sync": now_str,
-                "latency_ms": 38,
+                "latency_ms": smt_lat,
                 "feed_type": "Relational Sync",
                 "protocol": "REST / JSON"
             },
@@ -829,11 +1000,11 @@ def get_data_integrations(db: Session = Depends(get_db)):
                 "id": "tdms",
                 "name": "Traction Distribution Management System (TDMS)",
                 "department": "Traction Distribution / Electrical (TRD)",
-                "status": "Connected (Live DB)",
+                "status": trd_status,
                 "record_count": trd_assets + trd_tasks,
                 "detail": f"{trd_assets} OHE/Substation Assets, {trd_tasks} Isolation Tasks",
                 "last_sync": now_str,
-                "latency_ms": 55,
+                "latency_ms": trd_lat,
                 "feed_type": "Relational Sync",
                 "protocol": "REST / HTTPS"
             },
@@ -841,11 +1012,11 @@ def get_data_integrations(db: Session = Depends(get_db)):
                 "id": "coa",
                 "name": "Control Office Application (COA)",
                 "department": "Operating / Central Corridor Control",
-                "status": "Connected (Live DB)",
+                "status": coa_status,
                 "record_count": coa_blocks + coa_trains,
                 "detail": f"{coa_blocks} Available Block Windows, {coa_trains} Timetable Movements",
                 "last_sync": now_str,
-                "latency_ms": 28,
+                "latency_ms": coa_lat,
                 "feed_type": "Stream / Batch",
                 "protocol": "COA Gateway"
             },
@@ -853,11 +1024,11 @@ def get_data_integrations(db: Session = Depends(get_db)):
                 "id": "bdms",
                 "name": "Block Demand & Management System (BDMS)",
                 "department": "Joint Operations & Corridor Possessions",
-                "status": "Connected (Live DB)",
+                "status": bdms_status,
                 "record_count": bdms_history,
                 "detail": f"{bdms_history} Recorded Maintenance Blocks & Line Clear Sanctions",
                 "last_sync": now_str,
-                "latency_ms": 62,
+                "latency_ms": bdms_lat,
                 "feed_type": "Disconnection Requisition",
                 "protocol": "BDMS API"
             },
@@ -865,11 +1036,11 @@ def get_data_integrations(db: Session = Depends(get_db)):
                 "id": "goods_forecast",
                 "name": "Freight Train Forecast & Density Engine",
                 "department": "Freight Logistics & FOIS",
-                "status": "Connected (Live DB)",
+                "status": goods_status,
                 "record_count": goods_fc_count,
-                "detail": f"{goods_fc_count} Calibrated Corridor Density Forecasts",
+                "detail": f"{goods_fc_count} Corridor Freight Density Forecasts",
                 "last_sync": now_str,
-                "latency_ms": 45,
+                "latency_ms": goods_lat,
                 "feed_type": "Predictive Feed",
                 "protocol": "FOIS Gateway"
             }
@@ -914,20 +1085,49 @@ def approve_plan_task(req: PlanApprovalRequest):
 @router.get("/models/health")
 def get_model_health():
     root = get_project_root()
-    mc_paths = [
-        os.path.join(root, "ml", "models", "model_card.json"),
-        "ml/models/model_card.json",
-        "../ml/models/model_card.json"
-    ]
-    for p in mc_paths:
-        if os.path.exists(p):
-            with open(p, "r") as f:
-                return json.load(f)
+    model_file = os.path.join(root, "ml", "models", "calibrated_rf.joblib")
+    card_file = os.path.join(root, "ml", "models", "model_card.json")
+
+    artifact_exists = os.path.exists(model_file)
+    card_exists = os.path.exists(card_file)
+
+    card_data = {}
+    if card_exists:
+        try:
+            with open(card_file, "r") as f:
+                card_data = json.load(f)
+        except Exception:
+            card_data = {}
+
+    modified_time = None
+    if artifact_exists:
+        try:
+            mtime = os.path.getmtime(model_file)
+            modified_time = datetime.fromtimestamp(mtime).strftime("%Y-%m-%d %H:%M:%S IST")
+        except Exception:
+            pass
+
     return {
-        "status": "calibrated_heuristic",
-        "model": "RandomForestClassifier",
-        "calibration": "Platt / Isotonic",
-        "version": "v1.1.0"
+        "status": "Artifact present — provenance requires validation" if artifact_exists else "No artifact loaded",
+        "model_name": "CalibratedClassifierCV (RandomForestClassifier + Isotonic)",
+        "version": card_data.get("version", "v1.1.0"),
+        "primary_target": card_data.get("primary_target", "failure_next_30d"),
+        "split_method": card_data.get("split_method", "Temporal"),
+        "artifact_path": "ml/models/calibrated_rf.joblib",
+        "artifact_available": artifact_exists,
+        "artifact_last_modified": modified_time,
+        "feature_count": 10,
+        "features": CANONICAL_FEATURES,
+        "metrics": card_data.get("metrics", {
+            "pr_auc": 0.9667,
+            "recall": 0.8,
+            "precision": 1.0,
+            "brier_score": 0.0462
+        }),
+        "provenance": "Artifact present — trained on synthetic baseline, provenance requires real operational failure records",
+        "provenance_status": "Artifact present — trained on synthetic baseline, provenance requires real operational failure records",
+        "is_production_validated": False,
+        "validation_notice": "Evaluation metrics reflect synthetic training distribution. Indian Railways operational failure outcomes must be supplied for production calibration."
     }
 
 @router.get("/optimization/runs")
