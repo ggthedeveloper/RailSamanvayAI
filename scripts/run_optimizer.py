@@ -19,7 +19,7 @@ from app.api.endpoints import load_real_demands_and_blocks
 
 def run_optimization(horizon="weekly", objective_profile="safety_first", output_file=None):
     print("=" * 70)
-    print("RAILSAMANV — AI AUTOMATIC BLOCK PLANNING (REAL INDIAN RAILWAYS DATA)")
+    print("RAILSAMANVAYAI — AI AUTOMATIC BLOCK PLANNING (REAL INDIAN RAILWAYS DATA)")
     print("=" * 70)
 
     if output_file is None:

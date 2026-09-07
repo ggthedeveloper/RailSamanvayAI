@@ -1,4 +1,4 @@
-# SIH26027 — AI-Powered Automatic Block Planning
+# RailSamanvayAI — AI-Powered Automatic Block Planning
 
 **Ministry:** Ministry of Railways
 **Theme:** Transportation & Logistics
