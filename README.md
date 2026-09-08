@@ -185,7 +185,7 @@ Keeps the final decision with an authorized railway planner.
               │ Review + Approve    │
               └─────────────────────┘
 
-              # 👥 Team The Steel Bytes 800
+              # Team The Steel Bytes 800
 
 ## Our Team
 
