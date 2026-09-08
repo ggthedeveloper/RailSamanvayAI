@@ -133,3 +133,30 @@ tbody tr:hover {
     grid-template-columns: 1fr;
   }
 }
+
+/* Industrial Responsive Breakout Protections */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: minmax(320px, 42%) minmax(380px, 58%);
+  gap: 20px;
+}
+
+@media (max-width: 1120px) {
+  .dashboard-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+@media (max-width: 900px) {
+  .hero-banner-flex {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 20px !important;
+  }
+  .hero-banner-glass {
+    align-self: flex-start !important;
+    max-width: 100% !important;
+    width: 100% !important;
+  }
+}
+

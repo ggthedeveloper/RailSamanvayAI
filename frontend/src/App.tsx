@@ -252,18 +252,18 @@ function ControlRoom({ token, onLogout }: { token: string; onLogout: () => void 
         boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.03)'
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            width: 42,
-            height: 42,
-            borderRadius: 10,
-            background: 'linear-gradient(135deg, #1d4ed8, #2563eb)',
-            boxShadow: '0 2px 8px rgba(37,99,235,0.25)'
-          }}>
-            <Train size={24} color="#ffffff" />
-          </div>
+          <img
+            src="/railway_logo.png"
+            alt="Indian Railways"
+            style={{
+              width: 42,
+              height: 42,
+              borderRadius: '50%',
+              objectFit: 'cover',
+              flexShrink: 0,
+              boxShadow: '0 2px 8px rgba(0,0,0,0.12)'
+            }}
+          />
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <span style={{ fontSize: 18, fontWeight: 800, letterSpacing: '-0.02em', color: '#0f172a' }}>
@@ -547,6 +547,7 @@ function ControlRoom({ token, onLogout }: { token: string; onLogout: () => void 
                   optimizing={optimizing}
                   onRunOptimizer={handleRunOptimizer}
                   onNavigateToConflicts={() => navigate('/conflicts')}
+                  onNavigateToPlanning={() => navigate('/planning')}
                 />
               </ErrorBoundary>
             } />

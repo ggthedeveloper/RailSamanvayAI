@@ -62,33 +62,56 @@ export function Login({ setToken }: { setToken: (token: string) => void }) {
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      background: 'radial-gradient(ellipse at 50% 30%, #ffffff 0%, #f1f5f9 100%)',
-      padding: 20
+      position: 'relative',
+      background: '#0f172a',
+      padding: 20,
+      overflow: 'hidden'
     }}>
+      {/* High-resolution Railway Background Image Layer */}
+      <div style={{
+        position: 'absolute',
+        inset: 0,
+        backgroundImage: "url('/train_landscape.png')",
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        opacity: 0.32,
+        zIndex: 0
+      }} />
+      <div style={{
+        position: 'absolute',
+        inset: 0,
+        background: 'radial-gradient(ellipse at 50% 40%, rgba(15,23,42,0.6) 0%, rgba(15,23,42,0.95) 100%)',
+        zIndex: 1
+      }} />
+
       <div style={{
         ...cardStyle,
+        position: 'relative',
+        zIndex: 2,
         width: '100%',
         maxWidth: 460,
         padding: '36px 32px',
-        background: theme.surface,
-        border: `1px solid ${theme.borderLight}`,
-        boxShadow: '0 10px 40px rgba(0,0,0,0.08)'
+        background: 'rgba(255, 255, 255, 0.96)',
+        backdropFilter: 'blur(16px)',
+        WebkitBackdropFilter: 'blur(16px)',
+        border: `1px solid rgba(255, 255, 255, 0.8)`,
+        boxShadow: '0 20px 50px rgba(0,0,0,0.3)'
       }}>
         {/* Logo & Header */}
         <div style={{ textAlign: 'center', marginBottom: 24 }}>
-          <div style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            width: 58,
-            height: 58,
-            borderRadius: 14,
-            background: 'linear-gradient(135deg, rgba(2,132,199,0.1), rgba(37,99,235,0.2))',
-            border: `1px solid ${theme.cyan}44`,
-            marginBottom: 14
-          }}>
-            <Train size={32} color={theme.blue} />
-          </div>
+          <img
+            src="/railway_logo.png"
+            alt="Indian Railways"
+            style={{
+              width: 58,
+              height: 58,
+              borderRadius: '50%',
+              objectFit: 'cover',
+              margin: '0 auto 12px auto',
+              display: 'block',
+              boxShadow: '0 4px 14px rgba(0,0,0,0.12)'
+            }}
+          />
           <h1 style={{ margin: 0, fontSize: 26, fontWeight: 800, color: theme.text, letterSpacing: '-0.02em' }}>
             RailSamanvayAI
           </h1>
