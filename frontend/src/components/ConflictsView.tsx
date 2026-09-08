@@ -49,12 +49,12 @@ export function ConflictsView({ conflicts }: { conflicts: ConflictItem[] }) {
         {filteredConflicts.map((c, i) => (
           <div key={i} style={{
             ...cardStyle,
-            borderLeft: `4px solid ${c.severity === 'CRITICAL' ? theme.red : c.severity === 'WARNING' ? theme.amber : theme.cyan}`
+            borderLeft: `4px solid ${c.severity === 'CRITICAL' ? '#dc2626' : c.severity === 'WARNING' ? '#ca8a04' : '#16a34a'}`
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
               <span style={badgeStyle(
-                c.severity === 'CRITICAL' ? 'rgba(239, 68, 68, 0.25)' : c.severity === 'WARNING' ? 'rgba(245, 158, 11, 0.25)' : 'rgba(56, 189, 248, 0.25)',
-                c.severity === 'CRITICAL' ? theme.red : c.severity === 'WARNING' ? theme.amber : theme.cyan
+                c.severity === 'CRITICAL' ? 'rgba(239, 68, 68, 0.15)' : c.severity === 'WARNING' ? 'rgba(234, 179, 8, 0.18)' : 'rgba(22, 163, 74, 0.15)',
+                c.severity === 'CRITICAL' ? '#dc2626' : c.severity === 'WARNING' ? '#ca8a04' : '#16a34a'
               )}>
                 {c.severity} SEVERITY
               </span>

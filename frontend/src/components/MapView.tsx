@@ -360,21 +360,40 @@ export function MapView({
             ))}
 
             {/* Analyzed Route Polyline Highlight */}
-            {analyzedRouteLine && (
-              <Polyline
-                positions={analyzedRouteLine}
-                color={routeAnalysis?.block_required ? theme.red : theme.green}
-                weight={6}
-                opacity={0.9}
-              >
-                <Popup>
-                  <div style={{ color: '#0f172a', fontSize: 12 }}>
-                    <strong>{routeAnalysis?.verdict}</strong><br />
-                    {routeAnalysis?.summary}
-                  </div>
-                </Popup>
-              </Polyline>
-            )}
+            {analyzedRouteLine && (() => {
+              const riskProb = routeAnalysis?.risk_probability ?? 0;
+              const riskColor = riskProb >= 65 ? '#dc2626' : riskProb >= 35 ? '#ca8a04' : '#16a34a';
+              const riskTier = riskProb >= 65 ? 'HIGH RISK' : riskProb >= 35 ? 'MEDIUM RISK' : 'LOW RISK';
+
+              return (
+                <Polyline
+                  positions={analyzedRouteLine}
+                  color={riskColor}
+                  weight={6}
+                  opacity={0.9}
+                >
+                  <Popup>
+                    <div style={{ color: '#0f172a', fontSize: 12 }}>
+                      <div style={{
+                        display: 'inline-block',
+                        padding: '2px 7px',
+                        borderRadius: 4,
+                        fontSize: 10,
+                        fontWeight: 800,
+                        background: `${riskColor}22`,
+                        color: riskColor,
+                        marginBottom: 4
+                      }}>
+                        {riskTier} · {riskProb}%
+                      </div>
+                      <br />
+                      <strong>{routeAnalysis?.verdict}</strong><br />
+                      {routeAnalysis?.summary}
+                    </div>
+                  </Popup>
+                </Polyline>
+              );
+            })()}
 
             {/* Station Circle Markers */}
             {displayStations.map((s, idx) => {

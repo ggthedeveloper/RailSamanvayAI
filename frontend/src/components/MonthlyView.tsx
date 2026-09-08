@@ -36,8 +36,16 @@ export function MonthlyView({ goodsForecasts }: { goodsForecasts: GoodsForecastI
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   <strong style={{ fontSize: 14, color: theme.text }}>Corridor: {gf.corridor_id}</strong>
                   <span style={badgeStyle(
-                    gf.density_tier === 'High' ? 'rgba(239, 68, 68, 0.2)' : 'rgba(56, 189, 248, 0.2)',
-                    gf.density_tier === 'High' ? theme.red : theme.cyan
+                    gf.density_tier === 'High'
+                      ? 'rgba(239, 68, 68, 0.15)'
+                      : gf.density_tier === 'Medium'
+                      ? 'rgba(234, 179, 8, 0.18)'
+                      : 'rgba(22, 163, 74, 0.15)',
+                    gf.density_tier === 'High'
+                      ? '#dc2626'
+                      : gf.density_tier === 'Medium'
+                      ? '#ca8a04'
+                      : '#16a34a'
                   )}>
                     {gf.density_tier} Density Tier
                   </span>

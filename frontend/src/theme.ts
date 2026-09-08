@@ -123,13 +123,66 @@ export function getDeptColor(dept: string): { bg: string; text: string } {
   return { bg: 'rgba(139, 92, 246, 0.1)', text: '#7c3aed' }; // violet 600
 }
 
+export function getRiskLevel(risk: number | string | undefined | null): 'HIGH' | 'MEDIUM' | 'LOW' {
+  if (risk === undefined || risk === null) return 'LOW';
+  if (typeof risk === 'number') {
+    const val = risk <= 1.0 ? risk * 100 : risk;
+    if (val >= 65) return 'HIGH';
+    if (val >= 35) return 'MEDIUM';
+    return 'LOW';
+  }
+  const str = String(risk).toUpperCase();
+  if (str.includes('HIGH') || str.includes('CRITICAL') || str.includes('URGENT') || str.includes('P1')) {
+    return 'HIGH';
+  }
+  if (str.includes('MED') || str.includes('WARN') || str.includes('MODERATE') || str.includes('SCHEDULED') || str.includes('P2')) {
+    return 'MEDIUM';
+  }
+  return 'LOW';
+}
+
+export function getRiskTheme(risk: number | string | undefined | null) {
+  const level = getRiskLevel(risk);
+  switch (level) {
+    case 'HIGH':
+      return {
+        level: 'HIGH' as const,
+        color: '#dc2626', // Red
+        bg: 'rgba(239, 68, 68, 0.10)',
+        border: 'rgba(239, 68, 68, 0.35)',
+        badgeBg: 'rgba(239, 68, 68, 0.18)',
+        badge: badgeStyle('rgba(239, 68, 68, 0.18)', '#dc2626')
+      };
+    case 'MEDIUM':
+      return {
+        level: 'MEDIUM' as const,
+        color: '#ca8a04', // Yellow / Amber
+        bg: 'rgba(234, 179, 8, 0.10)',
+        border: 'rgba(234, 179, 8, 0.35)',
+        badgeBg: 'rgba(234, 179, 8, 0.18)',
+        badge: badgeStyle('rgba(234, 179, 8, 0.18)', '#ca8a04')
+      };
+    case 'LOW':
+    default:
+      return {
+        level: 'LOW' as const,
+        color: '#16a34a', // Green
+        bg: 'rgba(22, 163, 74, 0.10)',
+        border: 'rgba(22, 163, 74, 0.35)',
+        badgeBg: 'rgba(22, 163, 74, 0.18)',
+        badge: badgeStyle('rgba(22, 163, 74, 0.18)', '#16a34a')
+      };
+  }
+}
+
 export function getPriorityBadge(priority: string) {
   const p = (priority || '').toUpperCase();
-  if (p.includes('P1') || p.includes('CRITICAL')) {
-    return badgeStyle('rgba(239, 68, 68, 0.1)', '#dc2626'); // red 600
+  if (p.includes('P1') || p.includes('CRITICAL') || p.includes('HIGH') || p.includes('URGENT')) {
+    return badgeStyle('rgba(239, 68, 68, 0.15)', '#dc2626'); // Red
   }
-  if (p.includes('P2') || p.includes('HIGH')) {
-    return badgeStyle('rgba(245, 158, 11, 0.1)', '#d97706'); // amber 600
+  if (p.includes('P2') || p.includes('MEDIUM') || p.includes('WARNING') || p.includes('MODERATE') || p.includes('SCHEDULED')) {
+    return badgeStyle('rgba(234, 179, 8, 0.18)', '#ca8a04'); // Yellow
   }
-  return badgeStyle('rgba(14, 165, 233, 0.1)', '#0284c7'); // sky 600
+  return badgeStyle('rgba(22, 163, 74, 0.15)', '#16a34a'); // Green (Low / Normal / Routine / P3 / P4)
 }
+

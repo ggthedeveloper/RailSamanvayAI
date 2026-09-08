@@ -2,7 +2,7 @@ import React, { FormEvent, useState, useMemo } from 'react';
 import axios from 'axios';
 import { Sparkles, RefreshCw, AlertCircle, Info, CheckCircle2 } from 'lucide-react';
 import { Station, RouteAnalysisResult } from '../types';
-import { API_URL, theme, cardStyle, inputStyle, buttonPrimary, badgeStyle, apiError, authHeaders } from '../theme';
+import { API_URL, theme, cardStyle, inputStyle, buttonPrimary, badgeStyle, apiError, authHeaders, getRiskTheme } from '../theme';
 
 interface RouteAnalyzerProps {
   stations: Station[];
@@ -237,58 +237,107 @@ export function RouteAnalyzer({
         </button>
       </form>
 
-      {routeAnalysis && (
-        <div style={{
-          marginTop: 16,
-          padding: 16,
-          background: routeAnalysis.block_required ? 'rgba(239, 68, 68, 0.08)' : 'rgba(16, 185, 129, 0.08)',
-          border: `1px solid ${routeAnalysis.block_required ? theme.red : theme.green}44`,
-          borderRadius: 10
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8, flexWrap: 'wrap', gap: 6 }}>
-            <span style={badgeStyle(
-              routeAnalysis.block_required ? 'rgba(239, 68, 68, 0.2)' : 'rgba(16, 185, 129, 0.2)',
-              routeAnalysis.block_required ? theme.red : theme.green
-            )}>
-              {routeAnalysis.verdict}
-            </span>
-            <span style={{ fontSize: 12, fontWeight: 800, color: routeAnalysis.block_required ? theme.red : theme.green }}>
-              {routeAnalysis.risk_probability}% Risk
-            </span>
-          </div>
+      {routeAnalysis && (() => {
+        const risk = getRiskTheme(routeAnalysis.risk_probability);
+        const prob = routeAnalysis.risk_probability;
 
-          <div style={{ fontSize: 11, color: theme.textMuted, marginBottom: 8 }}>
-            Method: <strong>{routeAnalysis.prediction_mode === 'calibrated_random_forest' ? 'Calibrated RF Baseline' : 'Deterministic Safety Rule'}</strong>
-            {routeAnalysis.telemetry_source && ` · Telemetry: ${routeAnalysis.telemetry_source}`}
-          </div>
-
-          <div style={{ fontSize: 12, color: theme.text, marginBottom: 8 }}>
-            <strong>Recommended Possession:</strong> {routeAnalysis.recommended_window} ({routeAnalysis.estimated_duration_min} min)
-          </div>
-
-          {routeAnalysis.departments_involved && routeAnalysis.departments_involved.length > 1 && (
-            <div style={{ fontSize: 11, color: theme.cyan, marginBottom: 8 }}>
-              <strong>Cross-Department Possessions:</strong> {routeAnalysis.departments_involved.join(' + ')}
+        return (
+          <div style={{
+            marginTop: 16,
+            padding: 16,
+            background: risk.bg,
+            border: `1px solid ${risk.border}`,
+            borderRadius: 10,
+            transition: 'all 0.2s ease'
+          }}>
+            {/* Top Risk Header */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10, flexWrap: 'wrap', gap: 6 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span style={{
+                  padding: '3px 9px',
+                  borderRadius: 6,
+                  fontSize: 11,
+                  fontWeight: 800,
+                  letterSpacing: '0.04em',
+                  background: risk.badgeBg,
+                  color: risk.color,
+                  border: `1px solid ${risk.border}`,
+                  textTransform: 'uppercase'
+                }}>
+                  {risk.level} RISK
+                </span>
+                <span style={badgeStyle(risk.badgeBg, risk.color)}>
+                  {routeAnalysis.verdict}
+                </span>
+              </div>
+              <span style={{ fontSize: 13, fontWeight: 800, color: risk.color }}>
+                {prob}% Failure Risk
+              </span>
             </div>
-          )}
 
-          {routeAnalysis.factors_increasing_risk && routeAnalysis.factors_increasing_risk.length > 0 && (
-            <div style={{ fontSize: 11, color: theme.red, marginBottom: 6 }}>
-              <strong>Risk Factors:</strong> {routeAnalysis.factors_increasing_risk.join('; ')}
+            {/* Visual 3-Tier Risk Color Meter */}
+            <div style={{ marginBottom: 12 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10.5, fontWeight: 700, marginBottom: 4 }}>
+                <span style={{ color: risk.level === 'LOW' ? '#15803d' : theme.textDim, fontWeight: risk.level === 'LOW' ? 800 : 500 }}>
+                  ● Low (&lt;35%)
+                </span>
+                <span style={{ color: risk.level === 'MEDIUM' ? '#ca8a04' : theme.textDim, fontWeight: risk.level === 'MEDIUM' ? 800 : 500 }}>
+                  ● Medium (35–65%)
+                </span>
+                <span style={{ color: risk.level === 'HIGH' ? '#dc2626' : theme.textDim, fontWeight: risk.level === 'HIGH' ? 800 : 500 }}>
+                  ● High (&ge;65%)
+                </span>
+              </div>
+              <div style={{
+                height: 8,
+                borderRadius: 4,
+                background: '#e2e8f0',
+                position: 'relative',
+                overflow: 'hidden'
+              }}>
+                <div style={{
+                  height: '100%',
+                  width: `${Math.min(100, Math.max(5, prob))}%`,
+                  background: risk.color,
+                  borderRadius: 4,
+                  transition: 'width 0.4s ease, background 0.2s ease'
+                }} />
+              </div>
             </div>
-          )}
 
-          {routeAnalysis.factors_reducing_risk && routeAnalysis.factors_reducing_risk.length > 0 && (
-            <div style={{ fontSize: 11, color: theme.green, marginBottom: 6 }}>
-              <strong>Mitigating Factors:</strong> {routeAnalysis.factors_reducing_risk.join('; ')}
+            <div style={{ fontSize: 11, color: theme.textMuted, marginBottom: 8 }}>
+              Method: <strong>{routeAnalysis.prediction_mode === 'calibrated_random_forest' ? 'Calibrated RF Baseline' : 'Deterministic Safety Rule'}</strong>
+              {routeAnalysis.telemetry_source && ` · Telemetry: ${routeAnalysis.telemetry_source}`}
             </div>
-          )}
 
-          <div style={{ fontSize: 11, color: theme.textMuted, marginTop: 6, borderTop: `1px solid ${theme.borderLight}`, paddingTop: 6 }}>
-            {routeAnalysis.summary}
+            <div style={{ fontSize: 12, color: theme.text, marginBottom: 8 }}>
+              <strong>Recommended Possession:</strong> {routeAnalysis.recommended_window} ({routeAnalysis.estimated_duration_min} min)
+            </div>
+
+            {routeAnalysis.departments_involved && routeAnalysis.departments_involved.length > 1 && (
+              <div style={{ fontSize: 11, color: theme.cyan, marginBottom: 8 }}>
+                <strong>Cross-Department Possessions:</strong> {routeAnalysis.departments_involved.join(' + ')}
+              </div>
+            )}
+
+            {routeAnalysis.factors_increasing_risk && routeAnalysis.factors_increasing_risk.length > 0 && (
+              <div style={{ fontSize: 11, color: '#dc2626', marginBottom: 6 }}>
+                <strong>Risk Factors:</strong> {routeAnalysis.factors_increasing_risk.join('; ')}
+              </div>
+            )}
+
+            {routeAnalysis.factors_reducing_risk && routeAnalysis.factors_reducing_risk.length > 0 && (
+              <div style={{ fontSize: 11, color: '#15803d', marginBottom: 6 }}>
+                <strong>Mitigating Factors:</strong> {routeAnalysis.factors_reducing_risk.join('; ')}
+              </div>
+            )}
+
+            <div style={{ fontSize: 11, color: theme.textMuted, marginTop: 6, borderTop: `1px solid ${theme.borderLight}`, paddingTop: 6 }}>
+              {routeAnalysis.summary}
+            </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
     </div>
   );
 }
