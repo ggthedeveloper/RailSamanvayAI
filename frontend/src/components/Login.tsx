@@ -99,19 +99,31 @@ export function Login({ setToken }: { setToken: (token: string) => void }) {
       }}>
         {/* Logo & Header */}
         <div style={{ textAlign: 'center', marginBottom: 24 }}>
-          <img
-            src="/railway_logo.png"
-            alt="Indian Railways"
-            style={{
-              width: 58,
-              height: 58,
-              borderRadius: '50%',
-              objectFit: 'cover',
-              margin: '0 auto 12px auto',
-              display: 'block',
-              boxShadow: '0 4px 14px rgba(0,0,0,0.12)'
-            }}
-          />
+          <div style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: 64,
+            height: 64,
+            borderRadius: '50%',
+            background: '#ffffff',
+            boxShadow: '0 4px 18px rgba(37,99,235,0.2), 0 1px 3px rgba(0,0,0,0.08)',
+            border: '2px solid #dbeafe',
+            padding: 3,
+            margin: '0 auto 14px auto'
+          }}>
+            <img
+              src="/railway_logo.png"
+              alt="Indian Railways"
+              style={{
+                width: '100%',
+                height: '100%',
+                borderRadius: '50%',
+                objectFit: 'contain',
+                display: 'block'
+              }}
+            />
+          </div>
           <h1 style={{ margin: 0, fontSize: 26, fontWeight: 800, color: theme.text, letterSpacing: '-0.02em' }}>
             RailSamanvayAI
           </h1>

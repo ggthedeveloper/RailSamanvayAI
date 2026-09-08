@@ -252,18 +252,31 @@ function ControlRoom({ token, onLogout }: { token: string; onLogout: () => void 
         boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.03)'
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-          <img
-            src="/railway_logo.png"
-            alt="Indian Railways"
-            style={{
-              width: 42,
-              height: 42,
-              borderRadius: '50%',
-              objectFit: 'cover',
-              flexShrink: 0,
-              boxShadow: '0 2px 8px rgba(0,0,0,0.12)'
-            }}
-          />
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: 44,
+            height: 44,
+            borderRadius: '50%',
+            background: '#ffffff',
+            boxShadow: '0 2px 8px rgba(37,99,235,0.16)',
+            border: '1.5px solid #dbeafe',
+            padding: 2,
+            flexShrink: 0
+          }}>
+            <img
+              src="/railway_logo.png"
+              alt="Indian Railways"
+              style={{
+                width: '100%',
+                height: '100%',
+                borderRadius: '50%',
+                objectFit: 'contain',
+                display: 'block'
+              }}
+            />
+          </div>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <span style={{ fontSize: 18, fontWeight: 800, letterSpacing: '-0.02em', color: '#0f172a' }}>
