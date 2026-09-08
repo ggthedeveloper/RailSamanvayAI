@@ -108,3 +108,28 @@ tbody tr:hover {
 .leaflet-popup-tip {
   background: #ffffff !important;
 }
+
+/* Responsive Network & Layout Utilities */
+.app-layout {
+  display: grid;
+  grid-template-columns: 260px minmax(0, 1fr);
+  min-height: calc(100vh - 68px);
+}
+
+.network-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(360px, 1fr);
+  gap: 20px;
+}
+
+@media (max-width: 1180px) {
+  .network-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 860px) {
+  .app-layout {
+    grid-template-columns: 1fr;
+  }
+}

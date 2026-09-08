@@ -4,7 +4,7 @@ from app.db.database import get_db
 from app.db.models import (
     Asset, MaintenanceTask, BlockWindow, Station, Section, 
     OptimizationRun, Prediction, GoodsTrainForecast, MaintenanceHistory, 
-    TrainMovement, Department
+    TrainMovement, Department, Defect
 )
 from pydantic import BaseModel, Field
 from typing import Optional, List, Dict, Any
@@ -150,21 +150,44 @@ def analyze_route(req: RouteAnalysisRequest, db: Session = Depends(get_db)):
     # Check if real asset telemetry exists for this corridor section
     matched_asset = db.query(Asset).filter(Asset.section_id == section_id).first()
 
-    telemetry_source = "User-submitted parameters"
+    # Query corridor goods forecast for traffic load if available
+    corridor_forecast = db.query(GoodsTrainForecast).filter(
+        GoodsTrainForecast.corridor_id.like(f"%{st_from.code}%")
+    ).first()
+
     cond_score = req.condition_score if req.condition_score is not None else 0.55
     days_since_maint = req.days_since_maintenance if req.days_since_maintenance is not None else 180
     overdue = req.overdue_days if req.overdue_days is not None else 14
-    traffic = req.traffic_load if req.traffic_load is not None else 120
-    defects = req.defect_history if req.defect_history is not None else 3
+    traffic = req.traffic_load if req.traffic_load is not None else (corridor_forecast.predicted_goods_trains if corridor_forecast else 120)
+    defects = req.defect_history if req.defect_history is not None else 0
     is_crit = 1 if req.safety_critical else 0
+    age_days = 1825
 
-    if matched_asset and matched_asset.condition_score is not None:
-        telemetry_source = f"Observed asset {matched_asset.id} telemetry"
-        cond_score = float(matched_asset.condition_score) / 100.0 if matched_asset.condition_score > 1.0 else float(matched_asset.condition_score)
-        if matched_asset.criticality_class:
+    if matched_asset:
+        telemetry_source = f"Observed asset {matched_asset.id} repository"
+        if matched_asset.condition_score is not None and req.condition_score is None:
+            cond_score = float(matched_asset.condition_score) / 100.0 if matched_asset.condition_score > 1.0 else float(matched_asset.condition_score)
+        if matched_asset.criticality_class and req.safety_critical is None:
             is_crit = 1 if matched_asset.criticality_class.upper() in ["HIGH", "CRITICAL"] else 0
+        if matched_asset.installation_date:
+            try:
+                anchor = datetime(2026, 9, 8)
+                inst_dt = matched_asset.installation_date if isinstance(matched_asset.installation_date, datetime) else datetime.fromisoformat(str(matched_asset.installation_date))
+                age_days = max(1, (anchor - inst_dt).days)
+            except Exception:
+                age_days = 1825
+        # Count actual recorded defects for this asset
+        actual_defects = db.query(Defect).filter(Defect.asset_id == matched_asset.id).count()
+        if actual_defects > 0 and req.defect_history is None:
+            defects = actual_defects
+        # Check linked maintenance task for overdue days if not explicitly passed by user
+        linked_task = db.query(MaintenanceTask).filter(MaintenanceTask.asset_id == matched_asset.id).first()
+        if linked_task and req.overdue_days is None:
+            overdue = linked_task.overdue_days or 0
+            days_since_maint = linked_task.days_since_last_maintenance or days_since_maint
+    else:
+        telemetry_source = "User-configured operational parameters (No corridor asset record)"
 
-    age_days = 1825 # standard 5-year asset baseline
     X_input = build_canonical_features(
         condition_score=cond_score,
         days_since_maintenance=days_since_maint,
@@ -275,6 +298,16 @@ def analyze_route(req: RouteAnalysisRequest, db: Session = Depends(get_db)):
         "prediction_mode": prediction_mode,
         "model_reason": model_reason,
         "telemetry_source": telemetry_source,
+        "features_used": {
+            "condition_score": round(cond_score, 2),
+            "overdue_days": overdue,
+            "days_since_maintenance": days_since_maint,
+            "traffic_load": traffic,
+            "defect_history": defects,
+            "age_days": age_days,
+            "is_safety_critical": is_crit,
+            "department": (req.department or "ENGINEERING").upper()
+        },
         "summary": f"Route {st_from.name} ({st_from.code}) -> {st_to.name} ({st_to.code}) [{distance_km} km]: {verdict} with {round(risk_probability * 100, 1)}% risk score under {priority_class} classification via {method_label}."
     }
 

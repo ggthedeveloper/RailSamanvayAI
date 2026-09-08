@@ -13,7 +13,7 @@ interface OverviewViewProps {
   blocks: BlockWindowItem[];
   conflicts: ConflictItem[];
   optStatus: string;
-  optObjective: number;
+  optObjective: number | null;
   optimizing: boolean;
   onRunOptimizer: () => void;
   onNavigateToConflicts: () => void;
@@ -86,7 +86,7 @@ export function OverviewView({
         {[
           {
             title: 'Maintenance Demands',
-            val: totalTasks || plans.length,
+            val: totalTasks > 0 ? totalTasks : (plans.length > 0 ? plans.length : 0),
             sub: 'TMS, SMMS, TDMS & BDMS Feeds',
             icon: ListTodo,
             color: theme.cyan
@@ -94,7 +94,7 @@ export function OverviewView({
           {
             title: 'Optimized Block Assignments',
             val: scheduledCount,
-            sub: `${Math.round((scheduledCount / (totalTasks || plans.length || 1)) * 100)}% Scheduled via CP-SAT`,
+            sub: totalTasks > 0 ? `${Math.round((scheduledCount / totalTasks) * 100)}% Scheduled via CP-SAT` : (scheduledCount > 0 ? `${scheduledCount} Scheduled Tasks` : 'Not run yet'),
             icon: Layers,
             color: theme.blue
           },
@@ -135,10 +135,10 @@ export function OverviewView({
           },
           {
             title: 'OR-Tools CP-SAT Status',
-            val: optStatus,
-            sub: `Objective: ${optObjective.toLocaleString()}`,
+            val: optStatus || 'Not run yet',
+            sub: optObjective !== null && optObjective !== undefined ? `Objective: ${optObjective.toLocaleString()}` : 'No optimization executed',
             icon: Cpu,
-            color: optStatus === 'OPTIMAL' ? theme.green : theme.amber
+            color: optStatus === 'OPTIMAL' ? theme.green : optStatus ? theme.amber : theme.textMuted
           }
         ].map((kpi, idx) => {
           const Icon = kpi.icon;

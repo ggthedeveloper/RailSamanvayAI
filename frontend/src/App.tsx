@@ -48,12 +48,13 @@ function ControlRoom({ token, onLogout }: { token: string; onLogout: () => void 
   // States & Filters
   const [loading, setLoading] = useState(true);
   const [optimizing, setOptimizing] = useState(false);
-  const [optStatus, setOptStatus] = useState<string>('OPTIMAL');
-  const [optObjective, setOptObjective] = useState<number>(18715.0);
+  const [optStatus, setOptStatus] = useState<string>('');
+  const [optObjective, setOptObjective] = useState<number | null>(null);
   const [selectedHorizon, setSelectedHorizon] = useState<'weekly' | 'monthly'>('weekly');
   const [objectiveProfile, setObjectiveProfile] = useState<string>('safety_first');
-  const [lastOptimizedAt, setLastOptimizedAt] = useState<string>('Just now');
+  const [lastOptimizedAt, setLastOptimizedAt] = useState<string>('Not run yet');
   const [errorBanner, setErrorBanner] = useState<string>('');
+  const [stationsError, setStationsError] = useState<string>('');
 
   // Map & Route Analyzer Selection
   const [selectedStation, setSelectedStation] = useState<Station | null>(null);
@@ -81,11 +82,12 @@ function ControlRoom({ token, onLogout }: { token: string; onLogout: () => void 
   }, []);
 
   // ------------------------------------------------------------------------
-  // DATA FETCHING
+  // DATA FETCHING (Decoupled from selectedStation to eliminate request storms)
   // ------------------------------------------------------------------------
   const fetchAllData = useCallback(async () => {
     setLoading(true);
     setErrorBanner('');
+    setStationsError('');
     try {
       const headers = authHeaders(token);
       const [stRes, secRes, plRes, tskRes, astRes, blkRes, confRes, intRes, gfRes, mhRes] = await Promise.allSettled([
@@ -104,14 +106,22 @@ function ControlRoom({ token, onLogout }: { token: string; onLogout: () => void 
       if (stRes.status === 'fulfilled') {
         const list = Array.isArray(stRes.value.data) ? stRes.value.data : [];
         setStations(list);
-        if (list.length > 0 && !selectedStation) {
-          const ndls = list.find(s => s.code === 'NDLS') || list[0];
-          setSelectedStation(ndls);
+        if (list.length > 0) {
+          setSelectedStation(prev => prev || list.find(s => s.code === 'NDLS') || list[0]);
         }
+      } else {
+        setStationsError(apiError(stRes.reason, 'Failed to load railway network stations.'));
       }
 
       if (secRes.status === 'fulfilled') setSections(Array.isArray(secRes.value.data) ? secRes.value.data : []);
-      if (plRes.status === 'fulfilled') setPlans(Array.isArray(plRes.value.data) ? plRes.value.data : []);
+      if (plRes.status === 'fulfilled') {
+        const planList = Array.isArray(plRes.value.data) ? plRes.value.data : [];
+        setPlans(planList);
+        if (planList.length > 0) {
+          setOptStatus(prev => prev || 'OPTIMAL');
+          setLastOptimizedAt(prev => prev === 'Not run yet' ? 'Canonical Schedule' : prev);
+        }
+      }
       if (tskRes.status === 'fulfilled') setTasks(Array.isArray(tskRes.value.data) ? tskRes.value.data : []);
       if (astRes.status === 'fulfilled') setAssets(Array.isArray(astRes.value.data) ? astRes.value.data : []);
       if (blkRes.status === 'fulfilled') setBlocks(Array.isArray(blkRes.value.data) ? blkRes.value.data : []);
@@ -127,7 +137,7 @@ function ControlRoom({ token, onLogout }: { token: string; onLogout: () => void 
     } finally {
       setLoading(false);
     }
-  }, [token, selectedStation]);
+  }, [token]);
 
   useEffect(() => {
     fetchAllData();
@@ -220,7 +230,7 @@ function ControlRoom({ token, onLogout }: { token: string; onLogout: () => void 
     }
   };
 
-  const totalTasks = tasks.length || 56;
+  const totalTasks = tasks.length;
   const blocksUsedCount = new Set(plans.map(p => p.block_id)).size;
 
   return (
@@ -285,11 +295,11 @@ function ControlRoom({ token, onLogout }: { token: string; onLogout: () => void 
               width: 8,
               height: 8,
               borderRadius: '50%',
-              background: optStatus === 'OPTIMAL' ? '#16a34a' : '#d97706',
-              boxShadow: `0 0 6px ${optStatus === 'OPTIMAL' ? '#16a34a' : '#d97706'}`
+              background: optStatus === 'OPTIMAL' ? '#16a34a' : optStatus ? '#d97706' : '#94a3b8',
+              boxShadow: optStatus ? `0 0 6px ${optStatus === 'OPTIMAL' ? '#16a34a' : '#d97706'}` : 'none'
             }} />
             <span style={{ fontWeight: 600 }}>
-              {optStatus === 'OPTIMAL' ? 'CP-SAT Solver Optimal' : 'Fallback Rules Active'}
+              {optStatus === 'OPTIMAL' ? 'CP-SAT Solver Optimal' : optStatus ? 'Fallback Rules Active' : 'Solver Idle (Not run yet)'}
             </span>
           </div>
 
@@ -371,7 +381,7 @@ function ControlRoom({ token, onLogout }: { token: string; onLogout: () => void 
       {/* ------------------------------------------------------------------ */}
       {/* MAIN LAYOUT: SIDEBAR + WORKSPACE */}
       {/* ------------------------------------------------------------------ */}
-      <div style={{ display: 'grid', gridTemplateColumns: '260px minmax(0, 1fr)', minHeight: 'calc(100vh - 68px)' }}>
+      <div className="app-layout">
         {/* SIDEBAR NAVIGATION */}
         <aside style={{
           background: '#ffffff',
@@ -396,7 +406,12 @@ function ControlRoom({ token, onLogout }: { token: string; onLogout: () => void 
                 { path: '/monthly', label: 'Monthly Rolling', icon: Compass },
                 { path: '/conflicts', label: 'Conflicts & Alerts', icon: AlertTriangle, badge: conflicts.length, badgeColor: theme.red },
                 { path: '/approval', label: 'Possession Sign-Off', icon: FileCheck },
-                { path: '/integrations', label: 'Data Integrations', icon: Database, badge: '6/6' },
+                {
+                  path: '/integrations',
+                  label: 'Data Integrations',
+                  icon: Database,
+                  badge: integrations.length > 0 ? `${integrations.filter(i => i.status === 'CONNECTED').length}/${integrations.length}` : undefined
+                },
                 { path: '/settings', label: 'Solver & Config', icon: Settings }
               ].map(item => {
                 const Icon = item.icon;
@@ -548,7 +563,7 @@ function ControlRoom({ token, onLogout }: { token: string; onLogout: () => void 
                     </p>
                   </div>
 
-                  <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1.5fr) minmax(360px, 1fr)', gap: 20 }}>
+                  <div className="network-grid">
                     <MapView
                       stations={stations}
                       sections={sections}
@@ -558,6 +573,9 @@ function ControlRoom({ token, onLogout }: { token: string; onLogout: () => void 
                         setRouteFrom(s.code);
                       }}
                       routeAnalysis={routeAnalysis}
+                      loading={loading}
+                      error={stationsError}
+                      onRetry={fetchAllData}
                     />
 
                     <div style={{ display: 'grid', gap: 16 }}>

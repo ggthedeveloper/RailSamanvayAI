@@ -211,6 +211,14 @@ export function ApprovalView({
                   </tr>
                 );
               })}
+
+              {plans.length === 0 && (
+                <tr>
+                  <td colSpan={10} style={{ padding: 36, textAlign: 'center', color: theme.textDim }}>
+                    No scheduled blocks currently pending sign-off. Run the CP-SAT optimizer to generate possession requisitions.
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>

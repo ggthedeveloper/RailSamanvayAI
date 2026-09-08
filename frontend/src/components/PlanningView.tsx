@@ -12,7 +12,7 @@ interface PlanningViewProps {
   objectiveProfile: string;
   setObjectiveProfile: (p: string) => void;
   optStatus: string;
-  optObjective: number;
+  optObjective: number | null;
   lastOptimizedAt: string;
   optimizing: boolean;
   onRunOptimizer: () => void;
@@ -225,11 +225,11 @@ export function PlanningView({
           <span style={{ fontSize: 11, color: theme.textDim, fontWeight: 700, textTransform: 'uppercase' }}>
             Optimization Status
           </span>
-          <div style={{ fontSize: 16, fontWeight: 800, color: optStatus === 'OPTIMAL' ? theme.green : theme.amber, marginTop: 4 }}>
-            ● {optStatus}
+          <div style={{ fontSize: 16, fontWeight: 800, color: optStatus === 'OPTIMAL' ? theme.green : optStatus ? theme.amber : theme.textMuted, marginTop: 4 }}>
+            ● {optStatus || 'Not run yet'}
           </div>
           <div style={{ fontSize: 11, color: theme.textMuted, marginTop: 2 }}>
-            Objective Value: {optObjective.toLocaleString()}
+            Objective Value: {optObjective !== null && optObjective !== undefined ? optObjective.toLocaleString() : 'N/A'}
           </div>
         </div>
 
@@ -524,7 +524,9 @@ export function PlanningView({
               {filteredPlans.length === 0 && (
                 <tr>
                   <td colSpan={12} style={{ padding: 36, textAlign: 'center', color: theme.textDim }}>
-                    No matching scheduled blocks found. Try adjusting the search or filters.
+                    {plans.length === 0
+                      ? "No scheduled blocks available. Click 'Run CP-SAT Optimizer' above to generate an automated possession schedule."
+                      : 'No matching scheduled blocks found. Try adjusting the search query or active filters.'}
                   </td>
                 </tr>
               )}

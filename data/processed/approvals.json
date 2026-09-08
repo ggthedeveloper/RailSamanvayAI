@@ -6,27 +6,11 @@
     "remarks": "Approved after track geometry validation",
     "timestamp": "2026-09-07 23:09:50 IST"
   },
-<<<<<<< HEAD
   "TASK001": {
     "status": "REJECTED",
     "approver": "Section Controller",
     "role": "Section Controller",
     "remarks": "Peak corridor traffic congestion",
-    "timestamp": "2026-09-08 03:00:45 IST"
-=======
-  "TASK002": {
-    "status": "REJECTED",
-    "approver": "Chief Controller",
-    "role": "Station Master",
-    "remarks": "Approved per Indian Railways Safety Regulations",
-    "timestamp": "2026-09-08 03:48:03 IST"
-  },
-  "TASK001": {
-    "status": "APPROVED",
-    "approver": "Chief Controller",
-    "role": "Station Master",
-    "remarks": "Approved per Indian Railways Safety Regulations",
-    "timestamp": "2026-09-08 03:52:17 IST"
->>>>>>> faaec28 (Update RailSamanvayAI project)
+    "timestamp": "2026-09-08 12:47:00 IST"
   }
 }

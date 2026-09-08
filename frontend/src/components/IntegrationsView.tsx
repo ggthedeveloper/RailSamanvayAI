@@ -10,7 +10,7 @@ export function IntegrationsView({ integrations }: { integrations: DataIntegrati
           Railway IT Data Integration Matrix
         </h1>
         <p style={{ margin: '4px 0 0', fontSize: 13, color: theme.textMuted }}>
-          Real-time synchronization status across 6 core Indian Railways operational repositories.
+          Operational database synchronization status across core Indian Railways systems (Imported feeds).
         </p>
       </div>
 
@@ -18,8 +18,11 @@ export function IntegrationsView({ integrations }: { integrations: DataIntegrati
         {integrations.map(feed => (
           <div key={feed.id} style={cardStyle}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-              <span style={badgeStyle('rgba(16, 185, 129, 0.2)', theme.green)}>
-                ● {feed.status}
+              <span style={badgeStyle(
+                feed.status === 'CONNECTED' ? 'rgba(16, 185, 129, 0.2)' : feed.status === 'READY' ? 'rgba(56, 189, 248, 0.2)' : 'rgba(239, 68, 68, 0.2)',
+                feed.status === 'CONNECTED' ? theme.green : feed.status === 'READY' ? theme.cyan : theme.red
+              )}>
+                ● {feed.status === 'CONNECTED' ? 'IMPORTED & ACTIVE' : feed.status}
               </span>
               <span style={{ fontSize: 11, color: theme.textDim }}>
                 Latency: {feed.latency_ms} ms

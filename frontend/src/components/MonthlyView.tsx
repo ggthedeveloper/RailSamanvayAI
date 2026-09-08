@@ -57,6 +57,12 @@ export function MonthlyView({ goodsForecasts }: { goodsForecasts: GoodsForecastI
               </div>
             </div>
           ))}
+
+          {goodsForecasts.length === 0 && (
+            <div style={{ padding: 36, textAlign: 'center', color: theme.textDim }}>
+              No freight traffic forecast records available from FOIS/COA feeds.
+            </div>
+          )}
         </div>
       </div>
     </div>

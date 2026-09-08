@@ -116,6 +116,16 @@ export function TasksView({ tasks }: { tasks: MaintenanceTaskItem[] }) {
                   </tr>
                 );
               })}
+
+              {filteredTasks.length === 0 && (
+                <tr>
+                  <td colSpan={7} style={{ padding: 36, textAlign: 'center', color: theme.textDim }}>
+                    {tasks.length === 0
+                      ? 'No maintenance tasks loaded from TMS/SMMS/TDMS repositories.'
+                      : 'No maintenance tasks match the current search query or repository filter.'}
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>

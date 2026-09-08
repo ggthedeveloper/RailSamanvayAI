@@ -61,6 +61,13 @@ export function RouteAnalyzer({
       return;
     }
 
+    const fromExists = stations.some(s => s.code === fromStation);
+    const toExists = stations.some(s => s.code === toStation);
+    if (!fromExists || !toExists) {
+      setError('Origin and destination stations must both exist in the railway network.');
+      return;
+    }
+
     setLoading(true);
     setError('');
 
@@ -173,6 +180,37 @@ export function RouteAnalyzer({
           </div>
         </div>
 
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+          <div>
+            <label style={{ display: 'block', fontSize: 11, color: theme.textMuted, fontWeight: 700, marginBottom: 4 }}>
+              Corridor Traffic Load ({trafficLoad} trains/day)
+            </label>
+            <input
+              type="number"
+              min="10"
+              max="300"
+              style={inputStyle}
+              value={trafficLoad}
+              onChange={e => setTrafficLoad(Math.max(10, Math.min(300, Number(e.target.value) || 120)))}
+            />
+          </div>
+
+          <div>
+            <label style={{ display: 'block', fontSize: 11, color: theme.textMuted, fontWeight: 700, marginBottom: 4 }}>
+              Safety-Critical Asset Flag
+            </label>
+            <label style={{ fontSize: 12, color: theme.text, display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', height: 38 }}>
+              <input
+                type="checkbox"
+                checked={safetyCritical}
+                onChange={e => setSafetyCritical(e.target.checked)}
+                style={{ accentColor: theme.red }}
+              />
+              Safety Critical Infrastructure
+            </label>
+          </div>
+        </div>
+
         <div>
           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: theme.textMuted, marginBottom: 4 }}>
             <span>Asset Condition Score: <strong>{conditionScore.toFixed(2)}</strong></span>
@@ -187,18 +225,6 @@ export function RouteAnalyzer({
             onChange={e => setConditionScore(Number(e.target.value))}
             style={{ width: '100%', accentColor: theme.cyan }}
           />
-        </div>
-
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <label style={{ fontSize: 12, color: theme.text, display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
-            <input
-              type="checkbox"
-              checked={safetyCritical}
-              onChange={e => setSafetyCritical(e.target.checked)}
-              style={{ accentColor: theme.red }}
-            />
-            Safety-Critical Infrastructure Asset
-          </label>
         </div>
 
         <button
@@ -246,7 +272,19 @@ export function RouteAnalyzer({
             </div>
           )}
 
-          <div style={{ fontSize: 11, color: theme.textMuted }}>
+          {routeAnalysis.factors_increasing_risk && routeAnalysis.factors_increasing_risk.length > 0 && (
+            <div style={{ fontSize: 11, color: theme.red, marginBottom: 6 }}>
+              <strong>Risk Factors:</strong> {routeAnalysis.factors_increasing_risk.join('; ')}
+            </div>
+          )}
+
+          {routeAnalysis.factors_reducing_risk && routeAnalysis.factors_reducing_risk.length > 0 && (
+            <div style={{ fontSize: 11, color: theme.green, marginBottom: 6 }}>
+              <strong>Mitigating Factors:</strong> {routeAnalysis.factors_reducing_risk.join('; ')}
+            </div>
+          )}
+
+          <div style={{ fontSize: 11, color: theme.textMuted, marginTop: 6, borderTop: `1px solid ${theme.borderLight}`, paddingTop: 6 }}>
             {routeAnalysis.summary}
           </div>
         </div>

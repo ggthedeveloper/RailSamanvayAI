@@ -20,6 +20,51 @@ interface MapViewProps {
   selectedStation: Station | null;
   onSelectStation: (s: Station) => void;
   routeAnalysis: RouteAnalysisResult | null;
+  loading?: boolean;
+  error?: string;
+  onRetry?: () => void;
+}
+
+function RecenterController({
+  center,
+  recenterTrigger
+}: {
+  center: [number, number] | null;
+  recenterTrigger: number;
+}) {
+  const map = useMap();
+
+  // Handle map resizing on initial render and window changes
+  useEffect(() => {
+    const handleResize = () => {
+      map.invalidateSize();
+    };
+    const timer1 = setTimeout(handleResize, 100);
+    const timer2 = setTimeout(handleResize, 400);
+    window.addEventListener('resize', handleResize);
+    return () => {
+      clearTimeout(timer1);
+      clearTimeout(timer2);
+      window.removeEventListener('resize', handleResize);
+    };
+  }, [map]);
+
+  // Recenter when station selection changes
+  useEffect(() => {
+    if (center && Number.isFinite(center[0]) && Number.isFinite(center[1])) {
+      map.flyTo(center, Math.max(map.getZoom(), 7), { duration: 0.6 });
+    }
+  }, [center, map]);
+
+  // Explicit recenter to national capital corridor
+  useEffect(() => {
+    if (recenterTrigger > 0) {
+      const target = center || [28.6423, 77.2200];
+      map.flyTo(target, 6, { duration: 0.6 });
+    }
+  }, [recenterTrigger, center, map]);
+
+  return null;
 }
 
 export function MapView({
@@ -27,10 +72,13 @@ export function MapView({
   sections,
   selectedStation,
   onSelectStation,
-  routeAnalysis
+  routeAnalysis,
+  loading = false,
+  error = '',
+  onRetry
 }: MapViewProps) {
   const [tileError, setTileError] = useState(false);
-  const [resetKey, setResetKey] = useState(0);
+  const [recenterTrigger, setRecenterTrigger] = useState(0);
 
   // Validate coordinates strictly: finite and within valid geographic bounds
   const validStations = useMemo(() => {
@@ -98,8 +146,11 @@ export function MapView({
 
     const prioritized: Station[] = [];
     const others: Station[] = [];
+    const seenCodes = new Set<string>();
 
     validStations.forEach(s => {
+      if (seenCodes.has(s.code)) return;
+      seenCodes.add(s.code);
       if (priorityCodes.has(s.code)) {
         prioritized.push(s);
       } else {
@@ -109,6 +160,12 @@ export function MapView({
 
     return [...prioritized, ...others.slice(0, Math.max(0, 300 - prioritized.length))];
   }, [validStations, sections, selectedStation]);
+
+  // 4-state lifecycle resolution
+  const isStateLoading = loading && validStations.length === 0;
+  const isStateError = !loading && Boolean(error) && validStations.length === 0;
+  const isStateEmpty = !loading && !error && validStations.length === 0;
+  const isStateReady = validStations.length > 0;
 
   return (
     <div style={{ ...cardStyle, padding: 0, overflow: 'hidden', height: 620, display: 'flex', flexDirection: 'column' }}>
@@ -137,7 +194,7 @@ export function MapView({
             </span>
           )}
           <button
-            onClick={() => setResetKey(k => k + 1)}
+            onClick={() => setRecenterTrigger(k => k + 1)}
             style={{
               display: 'flex',
               alignItems: 'center',
@@ -176,7 +233,8 @@ export function MapView({
       )}
 
       <div style={{ flex: 1, position: 'relative', width: '100%', minHeight: 480 }}>
-        {validStations.length === 0 ? (
+        {/* STATE 1: LOADING */}
+        {isStateLoading && (
           <div style={{
             position: 'absolute',
             inset: 0,
@@ -193,9 +251,79 @@ export function MapView({
               Loading station coordinates from Indian Railways network...
             </span>
           </div>
-        ) : (
+        )}
+
+        {/* STATE 2: ERROR */}
+        {isStateError && (
+          <div style={{
+            position: 'absolute',
+            inset: 0,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            background: '#f8fafc',
+            flexDirection: 'column',
+            gap: 12,
+            padding: 24,
+            textAlign: 'center',
+            zIndex: 1000
+          }}>
+            <AlertCircle size={32} color={theme.red} />
+            <span style={{ fontSize: 14, fontWeight: 700, color: theme.red }}>
+              Unable to load railway station coordinates
+            </span>
+            <span style={{ fontSize: 12, color: theme.textMuted, maxWidth: 420 }}>
+              {error || 'Network error encountered while connecting to operations feed.'}
+            </span>
+            {onRetry && (
+              <button
+                onClick={onRetry}
+                style={{
+                  marginTop: 6,
+                  padding: '6px 14px',
+                  background: theme.blue,
+                  color: '#fff',
+                  border: 0,
+                  borderRadius: 6,
+                  fontSize: 12,
+                  fontWeight: 600,
+                  cursor: 'pointer'
+                }}
+              >
+                Retry Station Feed
+              </button>
+            )}
+          </div>
+        )}
+
+        {/* STATE 3: EMPTY */}
+        {isStateEmpty && (
+          <div style={{
+            position: 'absolute',
+            inset: 0,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            background: '#f8fafc',
+            flexDirection: 'column',
+            gap: 12,
+            padding: 24,
+            textAlign: 'center',
+            zIndex: 1000
+          }}>
+            <MapPin size={32} color={theme.textDim} />
+            <span style={{ fontSize: 14, fontWeight: 700, color: theme.text }}>
+              No valid station coordinates available
+            </span>
+            <span style={{ fontSize: 12, color: theme.textMuted, maxWidth: 420 }}>
+              The railway repository contains {stations.length} station records, but none contain valid geographic coordinates within operational boundaries.
+            </span>
+          </div>
+        )}
+
+        {/* STATE 4: READY */}
+        {isStateReady && (
           <MapContainer
-            key={resetKey}
             center={selectedCoords || [28.6423, 77.2200]}
             zoom={6}
             scrollWheelZoom={true}
@@ -209,7 +337,7 @@ export function MapView({
               }}
             />
 
-            <RecenterMap center={selectedCoords} />
+            <RecenterController center={selectedCoords} recenterTrigger={recenterTrigger} />
 
             {/* Corridor Section Polylines */}
             {sectionLines.map(sec => (
@@ -249,7 +377,7 @@ export function MapView({
             )}
 
             {/* Station Circle Markers */}
-            {displayStations.map(s => {
+            {displayStations.map((s, idx) => {
               const coords = getCoords(s);
               if (!coords) return null;
               const isSelected = selectedStation?.code === s.code;
@@ -261,7 +389,7 @@ export function MapView({
 
               return (
                 <CircleMarker
-                  key={s.code}
+                  key={`marker_${s.code}_${idx}`}
                   center={coords}
                   radius={isSelected ? 9 : isMajor ? 7 : 4}
                   pathOptions={{
