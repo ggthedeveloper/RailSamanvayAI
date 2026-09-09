@@ -37,6 +37,6 @@ app.add_middleware(
 app.include_router(endpoints.router)
 app.include_router(auth.router, prefix="/auth", tags=["auth"])
 
-@app.get("/health")
+@app.api_route("/health", methods=["GET", "HEAD"])
 def health_check():
     return {"status": "ok", "service": "railway-block-planner"}
