@@ -32,27 +32,25 @@ export function RouteAnalyzer({
   const [safetyCritical, setSafetyCritical] = useState<boolean>(true);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>('');
-  const [stationSearch, setStationSearch] = useState<string>('');
+  const [fromStationSearch, setFromStationSearch] = useState<string>('');
+  const [toStationSearch, setToStationSearch] = useState<string>('');
 
   const validStations = useMemo(() => {
     return stations.filter(s => s.code && Number.isFinite(Number(s.lat)) && Number.isFinite(Number(s.lon)));
   }, [stations]);
 
-  // Filtered station list for selection
-  const filteredStationOptions = useMemo(() => {
-    const q = stationSearch.toLowerCase().trim();
-    if (!q) {
-      // Prioritize key junction stations, then first 100 alphabetically
-      const keyCodes = ['NDLS', 'MTJ', 'AGC', 'GWL', 'CNB', 'HWH', 'BCT', 'BVI', 'BPL', 'ET', 'BSL', 'CSMT', 'DDU', 'ALD'];
-      const keySet = new Set(keyCodes);
-      const topStations = validStations.filter(s => keySet.has(s.code));
-      const otherStations = validStations.filter(s => !keySet.has(s.code)).slice(0, 150);
-      return [...topStations, ...otherStations];
-    }
-    return validStations.filter(s =>
-      s.code.toLowerCase().includes(q) || (s.name && s.name.toLowerCase().includes(q))
-    ).slice(0, 150);
-  }, [validStations, stationSearch]);
+  const handleStationInput = (
+    value: string,
+    setSearch: (value: string) => void,
+    setStation: (code: string) => void
+  ) => {
+    setSearch(value);
+    const normalizedValue = value.trim().toLowerCase();
+    const station = validStations.find(s =>
+      s.code.toLowerCase() === normalizedValue || s.name.toLowerCase() === normalizedValue
+    );
+    setStation(station?.code || '');
+  };
 
   const handleAnalyze = async (e: FormEvent) => {
     e.preventDefault();
@@ -107,47 +105,43 @@ export function RouteAnalyzer({
         </div>
       )}
 
-      <div style={{ marginBottom: 10 }}>
-        <input
-          style={{ ...inputStyle, fontSize: 11, padding: '5px 10px' }}
-          placeholder="Filter stations by code/name (e.g. NDLS, MTJ, Delhi)..."
-          value={stationSearch}
-          onChange={e => setStationSearch(e.target.value)}
-        />
-      </div>
-
       <form onSubmit={handleAnalyze} style={{ display: 'grid', gap: 12 }}>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
           <div>
             <label style={{ display: 'block', fontSize: 11, color: theme.textMuted, fontWeight: 700, marginBottom: 4 }}>
               Origin Station
             </label>
-            <select
+            <input
+              list="route-stations"
               style={inputStyle}
-              value={fromStation}
-              onChange={e => setFromStation(e.target.value)}
-            >
-              {filteredStationOptions.map(s => (
-                <option key={s.code} value={s.code}>{s.name} ({s.code})</option>
-              ))}
-            </select>
+              placeholder="Select or type origin station"
+              value={fromStationSearch}
+              onChange={e => handleStationInput(e.target.value, setFromStationSearch, setFromStation)}
+            />
           </div>
 
           <div>
             <label style={{ display: 'block', fontSize: 11, color: theme.textMuted, fontWeight: 700, marginBottom: 4 }}>
               Destination Station
             </label>
-            <select
+            <input
+              list="route-stations"
               style={inputStyle}
-              value={toStation}
-              onChange={e => setToStation(e.target.value)}
-            >
-              {filteredStationOptions.map(s => (
-                <option key={s.code} value={s.code}>{s.name} ({s.code})</option>
-              ))}
-            </select>
+              placeholder="Select or type destination station"
+              value={toStationSearch}
+              onChange={e => handleStationInput(e.target.value, setToStationSearch, setToStation)}
+            />
           </div>
         </div>
+
+        <datalist id="route-stations">
+          {validStations.map(s => (
+            <React.Fragment key={s.code}>
+              <option value={s.code}>{s.name}</option>
+              <option value={s.name}>{s.code}</option>
+            </React.Fragment>
+          ))}
+        </datalist>
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
           <div>

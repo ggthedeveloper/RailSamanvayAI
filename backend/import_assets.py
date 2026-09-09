@@ -7,11 +7,11 @@ from app.db.models import Asset, Department, Section
 
 
 # Project root:
-# C:\Users\User\Downloads\PratiAI-main
+# C:\Users\User\Downloads\RailSamanvayAI-main
 BASE_DIR = Path(__file__).resolve().parents[1]
 
 # CSV location:
-# C:\Users\User\Downloads\PratiAI-main\data\raw
+# C:\Users\User\Downloads\RailSamanvayAI-main\data\raw
 DATA_DIR = BASE_DIR / "data" / "raw"
 
 

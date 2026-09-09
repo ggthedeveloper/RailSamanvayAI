@@ -58,8 +58,8 @@ function ControlRoom({ token, onLogout }: { token: string; onLogout: () => void 
 
   // Map & Route Analyzer Selection
   const [selectedStation, setSelectedStation] = useState<Station | null>(null);
-  const [routeFrom, setRouteFrom] = useState<string>('NDLS');
-  const [routeTo, setRouteTo] = useState<string>('MTJ');
+  const [routeFrom, setRouteFrom] = useState<string>('');
+  const [routeTo, setRouteTo] = useState<string>('');
   const [routeAnalysis, setRouteAnalysis] = useState<RouteAnalysisResult | null>(null);
 
   // Approval Workspace Action State

@@ -129,37 +129,84 @@ export function MapView({
     const cFrom = getCoords(routeAnalysis.from_station);
     const cTo = getCoords(routeAnalysis.to_station);
     if (cFrom && cTo) {
+      type RailNode = { code: string; distance: number; previous: string | null };
+      const distances = new Map<string, RailNode>();
+      const queue: string[] = [];
+      stationMap.forEach(station => {
+        distances.set(station.code, {
+          code: station.code,
+          distance: station.code === routeAnalysis.from_station.code ? 0 : Infinity,
+          previous: null
+        });
+      });
+
+      const connections = new Map<string, { code: string; distance: number }[]>();
+      sections.forEach(section => {
+        if (!stationMap.has(section.station_from) || !stationMap.has(section.station_to)) return;
+        const distance = Number.isFinite(Number(section.distance_km))
+          ? Number(section.distance_km)
+          : 0;
+        if (!connections.has(section.station_from)) connections.set(section.station_from, []);
+        if (!connections.has(section.station_to)) connections.set(section.station_to, []);
+        connections.get(section.station_from)?.push({ code: section.station_to, distance });
+        connections.get(section.station_to)?.push({ code: section.station_from, distance });
+      });
+
+      queue.push(routeAnalysis.from_station.code);
+      const visited = new Set<string>();
+      while (queue.length > 0) {
+        queue.sort((a, b) => (distances.get(a)?.distance ?? Infinity) - (distances.get(b)?.distance ?? Infinity));
+        const current = queue.shift();
+        if (!current || visited.has(current)) continue;
+        visited.add(current);
+        if (current === routeAnalysis.to_station.code) break;
+
+        connections.get(current)?.forEach(neighbor => {
+          const currentDistance = distances.get(current)?.distance ?? Infinity;
+          const neighborNode = distances.get(neighbor.code);
+          const candidateDistance = currentDistance + neighbor.distance;
+          if (neighborNode && candidateDistance < neighborNode.distance) {
+            neighborNode.distance = candidateDistance;
+            neighborNode.previous = current;
+            queue.push(neighbor.code);
+          }
+        });
+      }
+
+      const pathCodes: string[] = [];
+      let currentCode: string | null = routeAnalysis.to_station.code;
+      while (currentCode) {
+        pathCodes.unshift(currentCode);
+        currentCode = distances.get(currentCode)?.previous ?? null;
+      }
+
+      if (pathCodes[0] === routeAnalysis.from_station.code) {
+        const path = pathCodes
+          .map(code => stationMap.get(code))
+          .map(station => station ? getCoords(station) : null)
+          .filter((coords): coords is [number, number] => coords !== null);
+        if (path.length > 1) return path;
+      }
+
       return [cFrom, cTo] as [number, number][];
     }
     return null;
-  }, [routeAnalysis]);
+  }, [routeAnalysis, sections, stationMap]);
 
-  // Selected stations to display on map (prioritizing stations with sections, major junctions, and selected)
+  // Keep the initial map focused on the loaded operating corridors rather than every station record.
   const displayStations = useMemo(() => {
-    const priorityCodes = new Set<string>();
-    if (selectedStation?.code) priorityCodes.add(selectedStation.code);
-    ['NDLS', 'MTJ', 'AGC', 'GWL', 'BVI', 'BCT', 'CNB', 'HWH', 'BPL', 'ET', 'BSL', 'CSMT'].forEach(c => priorityCodes.add(c));
+    const visibleCodes = new Set<string>();
+    if (selectedStation?.code) visibleCodes.add(selectedStation.code);
+    if (routeAnalysis?.from_station.code) visibleCodes.add(routeAnalysis.from_station.code);
+    if (routeAnalysis?.to_station.code) visibleCodes.add(routeAnalysis.to_station.code);
+    ['NDLS', 'MTJ', 'AGC', 'GWL', 'BVI', 'BCT', 'CNB', 'HWH', 'BPL', 'ET', 'BSL', 'CSMT'].forEach(c => visibleCodes.add(c));
     sections.forEach(sec => {
-      if (sec.station_from) priorityCodes.add(sec.station_from);
-      if (sec.station_to) priorityCodes.add(sec.station_to);
+      if (sec.station_from) visibleCodes.add(sec.station_from);
+      if (sec.station_to) visibleCodes.add(sec.station_to);
     });
 
-    const prioritized: Station[] = [];
-    const others: Station[] = [];
-    const seenCodes = new Set<string>();
-
-    validStations.forEach(s => {
-      if (seenCodes.has(s.code)) return;
-      seenCodes.add(s.code);
-      if (priorityCodes.has(s.code)) {
-        prioritized.push(s);
-      } else {
-        others.push(s);
-      }
-    });
-
-    return [...prioritized, ...others.slice(0, Math.max(0, 300 - prioritized.length))];
-  }, [validStations, sections, selectedStation]);
+    return validStations.filter(station => visibleCodes.has(station.code));
+  }, [validStations, sections, selectedStation, routeAnalysis]);
 
   // 4-state lifecycle resolution
   const isStateLoading = loading && validStations.length === 0;
@@ -335,6 +382,11 @@ export function MapView({
               eventHandlers={{
                 tileerror: () => setTileError(true)
               }}
+            />
+            <TileLayer
+              attribution="Railway overlay &copy; OpenRailwayMap contributors"
+              url="https://{s}.tiles.openrailwaymap.org/standard/{z}/{x}/{y}.png"
+              opacity={0.75}
             />
 
             <RecenterController center={selectedCoords} recenterTrigger={recenterTrigger} />

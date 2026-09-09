@@ -7,7 +7,7 @@ BACKEND_PID=$!
 
 echo "Starting Frontend..."
 cd ../frontend
-npm run dev -- --host 0.0.0.0 &
+npm run dev -- --host 0.0.0.0 --port 5174 &
 FRONTEND_PID=$!
 
 wait $BACKEND_PID

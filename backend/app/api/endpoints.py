@@ -16,6 +16,7 @@ import json
 import joblib
 import math
 import uuid
+import heapq
 
 router = APIRouter()
 
@@ -96,6 +97,33 @@ def haversine(lat1, lon1, lat2, lon2):
     c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
     return round(R * c, 2)
 
+def rail_distance(db: Session, origin: str, destination: str, fallback: float) -> float:
+    graph: Dict[str, List[tuple[str, float]]] = {}
+    sections = db.query(Section).filter(
+        Section.station_from.isnot(None),
+        Section.station_to.isnot(None),
+        Section.distance_km.isnot(None)
+    ).all()
+    for section in sections:
+        distance = float(section.distance_km)
+        graph.setdefault(section.station_from, []).append((section.station_to, distance))
+        graph.setdefault(section.station_to, []).append((section.station_from, distance))
+
+    distances = {origin: 0.0}
+    queue = [(0.0, origin)]
+    while queue:
+        current_distance, station = heapq.heappop(queue)
+        if station == destination:
+            return round(current_distance, 2)
+        if current_distance > distances.get(station, float('inf')):
+            continue
+        for neighbor, edge_distance in graph.get(station, []):
+            candidate = current_distance + edge_distance
+            if candidate < distances.get(neighbor, float('inf')):
+                distances[neighbor] = candidate
+                heapq.heappush(queue, (candidate, neighbor))
+    return fallback
+
 @router.get("/stations")
 def get_stations(db: Session = Depends(get_db)):
     return db.query(Station).all()
@@ -137,7 +165,8 @@ def analyze_route(req: RouteAnalysisRequest, db: Session = Depends(get_db)):
         raise HTTPException(status_code=400, detail="Origin and Destination stations must be different.")
     
     # Calculate distance
-    distance_km = haversine(st_from.lat, st_from.lon, st_to.lat, st_to.lon)
+    straight_line_distance = haversine(st_from.lat, st_from.lon, st_to.lat, st_to.lon)
+    distance_km = rail_distance(db, st_from.code, st_to.code, straight_line_distance)
     section_id = f"SEC_{st_from.code}_{st_to.code}"
     
     # Check if section exists in DB, if not auto-register it
