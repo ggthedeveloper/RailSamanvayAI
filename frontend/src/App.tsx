@@ -265,17 +265,7 @@ function ControlRoom({ token, onLogout }: { token: string; onLogout: () => void 
             padding: 2,
             flexShrink: 0
           }}>
-            <img
-              src="/railway_logo.png"
-              alt="Indian Railways"
-              style={{
-                width: '100%',
-                height: '100%',
-                borderRadius: '50%',
-                objectFit: 'contain',
-                display: 'block'
-              }}
-            />
+            <Train size={27} color={theme.blue} strokeWidth={1.8} aria-label="Railway" />
           </div>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>

@@ -112,17 +112,7 @@ export function Login({ setToken }: { setToken: (token: string) => void }) {
             padding: 3,
             margin: '0 auto 14px auto'
           }}>
-            <img
-              src="/railway_logo.png"
-              alt="Indian Railways"
-              style={{
-                width: '100%',
-                height: '100%',
-                borderRadius: '50%',
-                objectFit: 'contain',
-                display: 'block'
-              }}
-            />
+            <Train size={38} color={theme.blue} strokeWidth={1.8} aria-label="Railway" />
           </div>
           <h1 style={{ margin: 0, fontSize: 26, fontWeight: 800, color: theme.text, letterSpacing: '-0.02em' }}>
             RailSamanvayAI
