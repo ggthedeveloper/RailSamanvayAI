@@ -1,550 +1,1282 @@
-# RailSamanvayAI --- AI-Powered Automatic Block Planning
+# RailSamanvayAI
 
-```{=html}
+### AI-Powered Automatic Block Planning for Railway Maintenance
+
 <p align="center">
-```
-`<strong>`{=html}Plan Smarter. Coordinate Better. Keep Railways
-Moving.`</strong>`{=html}
-```{=html}
+
+**Intelligent Maintenance Planning • Risk Prediction • Constraint-Based Optimisation**
+
 </p>
-```
-```{=html}
+
 <p align="center">
-```
-Decision-support for maintenance block planning on Indian Railways
-```{=html}
+
+An AI-driven decision-support platform for optimising railway maintenance blocks while maximising asset availability and minimising operational conflicts.
+
 </p>
+
+---
+
+## 📌 Project Overview
+
+**RailSamanvayAI** is an AI-powered decision-support system developed for **Smart India Hackathon 2026 — Problem Statement SIH26027**, under the **Ministry of Railways** and the **Transportation & Logistics** theme.
+
+Railway infrastructure requires continuous inspection and maintenance to ensure safe and reliable train operations. However, maintenance activities compete for limited railway possession/block windows and may require shared resources such as maintenance crews and equipment.
+
+Traditional planning approaches can make it difficult to simultaneously consider:
+
+* Asset condition and failure risk
+* Maintenance urgency
+* Train movement constraints
+* Available possession windows
+* Crew and resource availability
+* Maintenance duration
+* Concurrent maintenance activities
+* Network-level operational conflicts
+
+RailSamanvayAI addresses this challenge through an integrated pipeline combining **Machine Learning, Feature Engineering, Risk Assessment, Constraint Programming, and Geospatial Visualisation**.
+
+The system predicts future asset-failure risk, prioritises maintenance activities accordingly, and generates feasible maintenance block plans using **Google OR-Tools CP-SAT**.
+
+The final recommendation is presented through a controller-oriented dashboard, where the human operator can review and approve the proposed maintenance plan.
+
+---
+
+# 🎯 Problem Statement
+
+### SIH26027
+
+**AI-Powered Automatic Block Planning to Maximize Asset Availability for Train Operations on Indian Railways**
+
+Railway maintenance activities need to be scheduled without unnecessarily disrupting train operations.
+
+A maintenance block represents a period during which railway infrastructure can be taken out of normal operation so that maintenance personnel can safely perform required work.
+
+The planning process becomes challenging when multiple maintenance requests compete for the same:
+
+* Time windows
+* Railway sections
+* Maintenance crews
+* Equipment
+* Possession periods
+
+The challenge is therefore to automatically generate maintenance plans that prioritise critical assets while satisfying operational and resource constraints.
+
+---
+
+# 💡 Proposed Solution
+
+RailSamanvayAI introduces a multi-stage intelligent planning pipeline:
+
+```text
+Railway & Maintenance Data
+            │
+            ▼
+     Data Preparation
+            │
+            ▼
+     Feature Engineering
+            │
+            ▼
+   Failure-Risk Prediction
+            │
+            ▼
+  Maintenance Prioritisation
+            │
+            ▼
+ Possible Block Generation
+            │
+            ▼
+ Constraint Validation
+            │
+            ▼
+   CP-SAT Optimisation
+            │
+            ▼
+ Recommended Block Plan
+            │
+            ▼
+     Human Controller
+            │
+            ▼
+      Final Schedule
 ```
 
-------------------------------------------------------------------------
+The system separates **risk assessment** from **schedule optimisation**.
 
-## Project Overview
+The Machine Learning layer answers:
 
-**RailSamanvayAI** is a production-style decision-support prototype
-developed for **Smart India Hackathon 2026 --- SIH26027**.
+> **Which assets are at greater risk and require attention?**
 
-The system combines **failure-risk prediction** with **constraint-based
-optimisation** to help railway controllers convert competing maintenance
-requests into a coordinated, constraint-valid block plan.
+The optimisation layer answers:
 
-Instead of treating maintenance as a static priority list,
-RailSamanvayAI:
+> **When and how can the required maintenance be scheduled while respecting operational constraints?**
 
-1.  Collects maintenance, asset, corridor, timetable and possession
-    information.
-2.  Engineers time-aware features from the available data.
-3.  Predicts the likelihood of asset failure within the next 30 days.
-4.  Prioritises maintenance tasks using risk-aware information.
-5.  Uses Google OR-Tools CP-SAT to construct a feasible block plan under
-    operational constraints.
-6.  Presents the recommended plan through a controller-focused
-    geospatial dashboard.
+---
 
-> **Important:** The prototype uses controlled synthetic internal
-> railway maintenance/planning data together with public
-> station/timetable information. It does not use live Indian Railways
-> operational data.
+# 🧠 Core Intelligence
 
-------------------------------------------------------------------------
+## 1. Predictive Asset Risk
 
-## Problem Statement
+Instead of relying solely on manually assigned maintenance priorities, RailSamanvayAI uses a Machine Learning model to estimate whether an asset is likely to experience a failure within the next 30 days.
 
-**Problem ID:** SIH26027
+### Prediction Target
 
-**Title:** AI-Powered Automatic Block Planning to Maximize Asset
-Availability for Train Operations on Indian Railways
-
-### The challenge
-
-Railway maintenance requests compete for limited possession/block
-windows across assets such as:
-
--   Track
--   Signalling
--   OHE
--   Bridges
--   Other railway infrastructure
-
-Independent planning can create overlapping tasks, fragmented work
-windows and avoidable asset downtime.
-
-RailSamanvayAI addresses this by combining **risk-aware maintenance
-prioritisation** with **constraint-based scheduling**.
-
-------------------------------------------------------------------------
-
-## Key Features
-
-### 1. Risk-Aware Maintenance Planning
-
-A calibrated machine-learning classifier predicts:
-
-``` text
+```text
 future_failure_next_30d
 ```
 
-The model uses temporal train/validation splitting so that future
-information is not mixed into the training period.
+The model produces a probability that can subsequently be used as an input to maintenance prioritisation.
 
-### 2. Task Prioritisation
+This changes the planning approach from:
 
-Maintenance requests can be prioritised using predicted failure risk and
-planning attributes rather than relying only on a static priority value.
-
-### 3. Constraint-Based Optimisation
-
-The Google OR-Tools **CP-SAT** solver creates a feasible maintenance
-block plan while enforcing hard constraints such as:
-
--   Crew limits
--   Maximum block duration
--   Concurrent task limits
--   Operational constraints
-
-The optimisation objective is to maximise completion of critical
-maintenance within available possession windows.
-
-### 4. Controller-Centric Decision Support
-
-The system provides a dashboard for reviewing:
-
--   Railway network/map information
--   Maintenance tasks
--   Risk indicators
--   Recommended block assignments
--   Scheduling timelines
--   Block utilisation
-
-The AI provides recommendations; the human controller remains
-responsible for the final decision.
-
-### 5. Geospatial Visualisation
-
-The frontend uses **React + Leaflet** to present railway and maintenance
-information spatially.
-
-------------------------------------------------------------------------
-
-## System Architecture
-
-``` text
-┌──────────────────────────────┐
-│     Railway Data Inputs      │
-│ Maintenance • Assets •       │
-│ Corridors • Timetable •      │
-│ Possession Availability      │
-└──────────────┬───────────────┘
-               │
-               ▼
-┌──────────────────────────────┐
-│      Feature Engineering     │
-│ Time-aware planning features │
-└──────────────┬───────────────┘
-               │
-               ▼
-┌──────────────────────────────┐
-│   Calibrated ML Classifier   │
-│ Predict failure in next 30d  │
-└──────────────┬───────────────┘
-               │
-               ▼
-┌──────────────────────────────┐
-│      Task Prioritisation     │
-│      Risk-aware ranking      │
-└──────────────┬───────────────┘
-               │
-               ▼
-┌──────────────────────────────┐
-│      OR-Tools CP-SAT         │
-│ Constraint-based optimisation│
-└──────────────┬───────────────┘
-               │
-               ▼
-┌──────────────────────────────┐
-│     Controller Dashboard     │
-│ Map • Risk • Tasks • Blocks  │
-│ Timeline • Recommendations   │
-└──────────────────────────────┘
+```text
+Static Priority
+      ↓
+Maintenance Schedule
 ```
 
-------------------------------------------------------------------------
+to:
 
-## Technology Stack
+```text
+Historical Asset Information
+          ↓
+Future Failure Risk
+          ↓
+Risk-Aware Priority
+          ↓
+Optimised Maintenance Schedule
+```
 
-  Layer                 Technologies
-  --------------------- -----------------------------------
-  Machine Learning      Python, calibrated classification
-  Optimisation          Google OR-Tools CP-SAT
-  Backend               FastAPI
-  Database              SQLite / PostgreSQL
-  Database Migrations   Alembic
-  Authentication        JWT
-  Frontend              React, Tailwind CSS
-  Geospatial UI         Leaflet
-  Data Processing       Python
-  Development           Git, GitHub
+---
 
-------------------------------------------------------------------------
+# 📊 Machine Learning Pipeline
 
-## Repository Structure
+The ML pipeline is designed for a time-dependent maintenance prediction problem.
 
-The repository is organised into dedicated backend, frontend, data,
-ML-model and script components:
+```text
+Historical Data
+      │
+      ▼
+Data Cleaning
+      │
+      ▼
+Feature Engineering
+      │
+      ▼
+Temporal Train / Validation Split
+      │
+      ▼
+Model Training
+      │
+      ▼
+Probability Calibration
+      │
+      ▼
+Future Failure Prediction
+      │
+      ▼
+Risk Score
+```
 
-``` text
+### Temporal Validation
+
+A temporal train/validation strategy is used instead of randomly mixing historical and future observations.
+
+This is important because the objective is to simulate a real maintenance-planning scenario where the model predicts future failures using information that would have been available at the prediction time.
+
+### Probability Calibration
+
+The model uses calibrated probabilities so that the predicted values can be incorporated into downstream risk-aware decision-making.
+
+---
+
+# 🔧 Maintenance Prioritisation
+
+The predicted failure probability is incorporated into maintenance prioritisation.
+
+A maintenance task can be evaluated using multiple factors, including:
+
+* Predicted failure risk
+* Asset condition
+* Maintenance urgency
+* Task duration
+* Available possession windows
+* Operational constraints
+
+The resulting information is provided to the optimisation layer.
+
+---
+
+# 🧮 Constraint-Based Optimisation
+
+The scheduling engine uses:
+
+### Google OR-Tools CP-SAT
+
+CP-SAT is a constraint-programming and optimisation solver capable of handling complex combinatorial scheduling problems.
+
+RailSamanvayAI uses it to identify feasible combinations of maintenance activities and assign them to available block windows.
+
+---
+
+## 🔒 Hard Constraints
+
+The optimisation model incorporates operational constraints such as:
+
+### Crew Availability
+
+A maintenance task can only be assigned when the required crew resources are available.
+
+### Maximum Block Duration
+
+Each maintenance block must remain within the permitted duration.
+
+### Concurrent Task Limits
+
+The number of simultaneously executing maintenance activities is constrained.
+
+### Possession Windows
+
+Maintenance activities must be assigned to valid railway possession periods.
+
+### Operational Compatibility
+
+Conflicting maintenance assignments must not be scheduled together when they violate defined operational constraints.
+
+---
+
+# 🎯 Optimisation Objective
+
+The optimisation engine aims to maximise the completion of critical maintenance activities while satisfying the defined constraints.
+
+Conceptually:
+
+```text
+Maximise:
+
+Critical Maintenance Completed
++
+Risk Reduction
++
+Block Utilisation
+
+Subject to:
+
+Crew Constraints
+Block Duration Constraints
+Concurrent Task Constraints
+Possession Constraints
+Operational Constraints
+```
+
+The optimisation process therefore does not simply select the highest-risk task.
+
+Instead, it searches for a **globally feasible combination of maintenance activities**.
+
+---
+
+# 🗺️ Geospatial Visualisation
+
+The frontend provides geospatial context using **Leaflet**.
+
+Railway assets and maintenance activities can be visualised geographically to help users understand:
+
+* Asset locations
+* Maintenance locations
+* Railway corridors
+* Maintenance blocks
+* Network-level planning information
+
+This provides a spatial representation of the generated maintenance plan.
+
+---
+
+# 🖥️ Decision-Support Dashboard
+
+The frontend is designed around the workflow of a railway controller or maintenance planner.
+
+The dashboard provides visibility into:
+
+### Asset Risk
+
+Identification of assets with higher predicted failure risk.
+
+### Maintenance Tasks
+
+Overview of maintenance activities requiring attention.
+
+### Block Planning
+
+Visualisation of proposed maintenance blocks.
+
+### Resource Utilisation
+
+Visibility into resource and crew allocation.
+
+### Schedule
+
+Timeline-oriented representation of maintenance activities.
+
+### Network Map
+
+Geographical representation of relevant railway infrastructure.
+
+---
+
+# 👤 Human-in-the-Loop Architecture
+
+RailSamanvayAI is designed as a **decision-support system**, not as an autonomous railway control system.
+
+The system follows:
+
+```text
+AI Prediction
+      ↓
+Risk Assessment
+      ↓
+Optimisation
+      ↓
+Recommendation
+      ↓
+Human Review
+      ↓
+Approval / Modification
+      ↓
+Final Maintenance Plan
+```
+
+The final operational decision remains with the authorised human controller.
+
+This architecture allows AI to assist with complex planning while maintaining human oversight.
+
+---
+
+# 🏗️ System Architecture
+
+```text
+                         ┌───────────────────────┐
+                         │   Railway Data Layer  │
+                         │                       │
+                         │ Assets                │
+                         │ Maintenance Tasks     │
+                         │ Timetables            │
+                         │ Possession Windows    │
+                         │ Network Information   │
+                         └───────────┬───────────┘
+                                     │
+                                     ▼
+                         ┌───────────────────────┐
+                         │   Feature Engineering │
+                         └───────────┬───────────┘
+                                     │
+                                     ▼
+                         ┌───────────────────────┐
+                         │   ML Risk Prediction  │
+                         │                       │
+                         │ Failure Risk < 30 Days│
+                         └───────────┬───────────┘
+                                     │
+                                     ▼
+                         ┌───────────────────────┐
+                         │ Maintenance Priority  │
+                         └───────────┬───────────┘
+                                     │
+                                     ▼
+                         ┌───────────────────────┐
+                         │ Block Generation      │
+                         └───────────┬───────────┘
+                                     │
+                                     ▼
+                         ┌───────────────────────┐
+                         │ OR-Tools CP-SAT       │
+                         │ Optimisation Engine   │
+                         └───────────┬───────────┘
+                                     │
+                                     ▼
+                         ┌───────────────────────┐
+                         │ Recommended Schedule  │
+                         └───────────┬───────────┘
+                                     │
+                                     ▼
+                         ┌───────────────────────┐
+                         │ Controller Dashboard  │
+                         └───────────────────────┘
+```
+
+---
+
+# 🛠️ Technology Stack
+
+| Component                | Technology                            |
+| ------------------------ | ------------------------------------- |
+| Programming Language     | Python                                |
+| ML                       | Scikit-learn / Calibrated Classifiers |
+| Optimisation             | Google OR-Tools CP-SAT                |
+| Backend Framework        | FastAPI                               |
+| Database                 | SQLite / PostgreSQL                   |
+| ORM / Data Layer         | SQLAlchemy                            |
+| Database Migration       | Alembic                               |
+| Authentication           | JWT                                   |
+| Frontend                 | React                                 |
+| Styling                  | Tailwind CSS                          |
+| Geospatial Visualisation | Leaflet                               |
+| API Communication        | REST APIs                             |
+| Deployment               | Render / Vercel                       |
+| Containerisation         | Docker                                |
+| Version Control          | Git / GitHub                          |
+
+---
+
+# 📂 Project Structure
+
+```text
 RailSamanvayAI/
 │
-├── backend/              # FastAPI backend, database and API services
-├── frontend/             # React + Tailwind + Leaflet dashboard
-├── data/                 # Project datasets and planning data
-├── docs/                 # Project documentation
-├── ml/
-│   └── models/           # Trained ML model artefacts
-├── scripts/              # Data, feature, training and optimisation scripts
+├── backend/
+│   ├── config/
+│   ├── controllers/
+│   ├── middleware/
+│   ├── models/
+│   ├── routes/
+│   ├── services/
+│   └── ...
 │
-├── .env.example          # Environment configuration template
-├── docker-compose.yml    # Container configuration
-├── railway_saas.db       # Local SQLite database
-├── run_all.sh            # Start backend and frontend
-├── render.yaml           # Deployment configuration
-├── vercel.json           # Frontend deployment configuration
+├── frontend/
+│   ├── src/
+│   ├── components/
+│   ├── pages/
+│   ├── services/
+│   └── ...
+│
+├── data/
+│   ├── raw/
+│   ├── processed/
+│   └── ...
+│
+├── docs/
+│   └── project documentation
+│
+├── ml/
+│   └── models/
+│
+├── scripts/
+│   ├── seed_database.py
+│   ├── build_features.py
+│   ├── train_models.py
+│   └── run_optimizer.py
+│
+├── .env.example
+├── docker-compose.yml
+├── render.yaml
+├── vercel.json
+├── run_all.sh
+├── railway_saas.db
 └── README.md
 ```
 
-------------------------------------------------------------------------
+---
 
-## Installation & Setup
+# 📥 Data Strategy
 
-### Prerequisites
+The project follows a hybrid data strategy.
 
-Make sure the following are installed:
+## Public Data
 
--   Python 3
--   Node.js and npm
--   Git
--   A supported database configuration (SQLite for local development or
-    PostgreSQL)
+Publicly available railway information is used where appropriate to provide realistic network and timetable context.
 
-### 1. Clone the repository
+## Controlled Synthetic Data
 
-``` bash
+Internal railway maintenance and operational information that is not publicly available is represented using controlled synthetic data.
+
+This can include:
+
+* Asset information
+* Maintenance requirements
+* Failure indicators
+* Maintenance duration
+* Resource requirements
+* Possession windows
+* Scheduling constraints
+
+This approach allows the project to demonstrate the complete planning pipeline without claiming access to confidential or live railway operational data.
+
+---
+
+# 🔄 Data-to-Decision Pipeline
+
+```text
+                    DATA
+                     │
+                     ▼
+          ┌────────────────────┐
+          │ Data Preparation   │
+          └─────────┬──────────┘
+                    │
+                    ▼
+          ┌────────────────────┐
+          │ Feature Engineering│
+          └─────────┬──────────┘
+                    │
+                    ▼
+          ┌────────────────────┐
+          │ ML Risk Prediction │
+          └─────────┬──────────┘
+                    │
+                    ▼
+          ┌────────────────────┐
+          │ Priority Assessment│
+          └─────────┬──────────┘
+                    │
+                    ▼
+          ┌────────────────────┐
+          │ Candidate Blocks   │
+          └─────────┬──────────┘
+                    │
+                    ▼
+          ┌────────────────────┐
+          │ Conflict Detection │
+          └─────────┬──────────┘
+                    │
+                    ▼
+          ┌────────────────────┐
+          │ CP-SAT Optimisation│
+          └─────────┬──────────┘
+                    │
+                    ▼
+          ┌────────────────────┐
+          │ Recommended Plan   │
+          └─────────┬──────────┘
+                    │
+                    ▼
+                 HUMAN
+```
+
+---
+
+# ⚙️ Installation
+
+## Prerequisites
+
+Ensure the following are installed:
+
+* Python 3.x
+* Node.js
+* npm
+* Git
+* SQLite or PostgreSQL
+
+---
+
+## 1. Clone the Repository
+
+```bash
 git clone https://github.com/ggthedeveloper/RailSamanvayAI.git
+
 cd RailSamanvayAI
 ```
 
-### 2. Create and activate a Python virtual environment
+---
 
-``` bash
+## 2. Create a Virtual Environment
+
+### Linux / macOS
+
+```bash
 python3 -m venv venv
+
 source venv/bin/activate
 ```
 
-On Windows PowerShell:
+### Windows
 
-``` powershell
+```powershell
 python -m venv venv
-.\venv\Scripts\Activate.ps1
+
+.\venv\Scripts\activate
 ```
 
-### 3. Install backend dependencies
+---
 
-``` bash
+## 3. Install Python Dependencies
+
+```bash
 pip install -r backend/requirements.txt
 ```
 
-### 4. Run database migrations
+---
 
-``` bash
+# 🗄️ Database Configuration
+
+Run the database migrations:
+
+```bash
 cd backend
+
 alembic upgrade head
+
 cd ..
 ```
 
-### 5. Generate data and run the ML/optimisation pipeline
+The project supports SQLite for local development and PostgreSQL for deployment-oriented environments.
 
-``` bash
+---
+
+# 🤖 Run the ML Pipeline
+
+Generate or initialise the required project data:
+
+```bash
 python scripts/seed_database.py
+```
+
+Build the ML features:
+
+```bash
 python scripts/build_features.py
+```
+
+Train the predictive model:
+
+```bash
 python scripts/train_models.py
+```
+
+Run the optimisation pipeline:
+
+```bash
 python scripts/run_optimizer.py
 ```
 
-### 6. Start the application
+---
 
-``` bash
+# ▶️ Running the Application
+
+The repository provides a combined startup script:
+
+```bash
 ./run_all.sh
 ```
 
-If `run_all.sh` is not executable on Linux/macOS:
+If necessary, make the script executable:
 
-``` bash
+```bash
 chmod +x run_all.sh
+```
+
+Then:
+
+```bash
 ./run_all.sh
 ```
 
-------------------------------------------------------------------------
+---
 
-## End-to-End Workflow
+# 🔐 Environment Variables
 
-``` text
-Maintenance Requests
-        │
-        ▼
-Asset & Network Data
-        │
-        ▼
-Feature Engineering
-        │
-        ▼
-Failure-Risk Prediction
-        │
-        ▼
-Task Prioritisation
-        │
-        ▼
-CP-SAT Optimisation
-        │
-        ▼
-Constraint-Valid Block Plan
-        │
-        ▼
-Controller Review
-        │
-        ▼
-Final Maintenance Schedule
-```
+Create a local environment configuration based on:
 
-------------------------------------------------------------------------
-
-## Data Strategy
-
-RailSamanvayAI follows a hybrid prototype-data strategy:
-
-### Controlled synthetic internal data
-
-Used for internal railway maintenance/planning attributes that are not
-publicly available.
-
-Examples include:
-
--   Maintenance requests
--   Asset condition/planning attributes
--   Possession availability
--   Block planning information
--   Maintenance scheduling constraints
-
-### Public railway information
-
-Public station and timetable information is used to provide realistic
-railway-network context.
-
-This separation allows the prototype to demonstrate the complete
-planning workflow without claiming access to live operational railway
-data.
-
-------------------------------------------------------------------------
-
-## Machine Learning Pipeline
-
-The ML pipeline is designed around a forward-looking prediction target:
-
-``` text
-future_failure_next_30d
-```
-
-### Pipeline
-
-``` text
-Historical / Planning Data
-          │
-          ▼
-Feature Engineering
-          │
-          ▼
-Temporal Train / Validation Split
-          │
-          ▼
-Classifier Training
-          │
-          ▼
-Probability Calibration
-          │
-          ▼
-Failure-Risk Prediction
-```
-
-The calibrated probability is then used as an input to risk-aware
-maintenance prioritisation.
-
-------------------------------------------------------------------------
-
-## Optimisation Model
-
-The optimisation layer uses **Google OR-Tools CP-SAT**.
-
-### Hard constraints include
-
--   Crew availability
--   Maximum block duration
--   Concurrent task limits
--   Operational constraints
--   Possession/block availability
-
-### Optimisation objective
-
-The planner aims to construct a feasible schedule that maximises
-completion of critical maintenance while respecting the available
-operational windows.
-
-``` text
-Tasks + Risk + Resources + Possession Windows
-                    │
-                    ▼
-              CP-SAT Solver
-                    │
-                    ▼
-        Feasible Block Allocation
-                    │
-                    ▼
-        Controller Review Dashboard
-```
-
-------------------------------------------------------------------------
-
-## Controller Dashboard
-
-The frontend is designed for railway controllers and planners rather
-than general passengers.
-
-The dashboard brings together:
-
--   Railway map
--   Maintenance requests
--   Risk indicators
--   Task list
--   Scheduling timeline
--   Block allocation
--   Recommended maintenance plan
-
-The system is intended as **decision support**, not an autonomous
-replacement for operational authority.
-
-------------------------------------------------------------------------
-
-## Authentication & Backend
-
-The SaaS backend is built using:
-
--   **FastAPI** for API services
--   **SQLite/PostgreSQL** for persistence
--   **Alembic** for database migrations
--   **JWT authentication** for authenticated access
-
-Environment-specific configuration should be supplied through
-environment variables rather than hard-coded secrets.
-
-------------------------------------------------------------------------
-
-## Deployment
-
-The repository includes deployment/configuration files for the
-application stack, including:
-
-``` text
-docker-compose.yml
-render.yaml
-vercel.json
+```text
 .env.example
 ```
 
-Deployment configuration may require environment-specific values for
-databases, authentication and frontend/backend URLs.
+Environment variables should be used for configuration such as:
 
-------------------------------------------------------------------------
+* Database connection
+* JWT configuration
+* Backend URL
+* Frontend URL
+* Deployment-specific settings
 
-## Prototype Scope & Limitations
+Sensitive credentials should never be committed to the repository.
 
-This is a **prototype decision-support system** developed for SIH26027.
+---
 
-### Current scope
+# 🐳 Docker
 
--   Controlled synthetic railway maintenance/planning data
--   Public railway station/timetable context
--   ML-based failure-risk prediction
--   Constraint-based block planning
--   Controller-facing visualisation
+The repository includes:
 
-### Important limitation
+```text
+docker-compose.yml
+```
 
-The prototype does **not** use live Indian Railways operational data.
-Any deployment for real operational use would require validated railway
-datasets, integration with authorised railway systems, operational
-safety validation, security review and domain-expert approval.
+which can be used to run the required application services in a containerised environment.
 
-------------------------------------------------------------------------
+A typical workflow is:
 
-## Expected Benefits
+```bash
+docker compose up --build
+```
 
-RailSamanvayAI is designed to support:
+---
 
--   Better possession-window utilisation
--   Fewer incompatible scheduling assignments
--   Risk-aware maintenance prioritisation
--   Reduced unnecessary asset downtime
--   Better controller decision support
--   More coordinated maintenance planning
+# Deployment
 
-------------------------------------------------------------------------
+The project contains deployment configuration for:
 
-## Future Enhancements
+* **Render** — backend / service deployment
+* **Vercel** — frontend deployment
 
-Potential future development areas include:
+Relevant configuration files include:
 
--   Integration with authorised live railway data feeds
--   More detailed crew/resource modelling
--   Advanced disruption and delay modelling
--   What-if scenario planning for controllers
--   Explainable risk predictions
--   Multi-corridor optimisation
--   Real-time schedule re-optimisation
--   Role-based access control and audit trails
--   Production-grade monitoring and observability
+```text
+render.yaml
+vercel.json
+```
 
-------------------------------------------------------------------------
+Deployment requires appropriate environment variables and database configuration.
 
-## Project
+---
 
-**RailSamanvayAI**
+# Backend
 
-**Smart India Hackathon 2026**
+The backend is implemented using **FastAPI**.
 
--   **Problem ID:** SIH26027
--   **Ministry:** Ministry of Railways
--   **Theme:** Transportation & Logistics
+Its responsibilities include:
 
-------------------------------------------------------------------------
+* Authentication
+* User management
+* Asset data
+* Maintenance data
+* Risk information
+* Optimisation results
+* Schedule information
+* Dashboard APIs
 
-## Disclaimer
+The backend acts as the bridge between the frontend dashboard, database, ML pipeline and optimisation engine.
 
-RailSamanvayAI is an SIH prototype and decision-support demonstration.
-It is not an operational railway control system and should not be used
-for real-world railway scheduling without appropriate validation,
-authorised data integration, safety processes and human operational
-oversight.
+---
 
-------------------------------------------------------------------------
+# Authentication
 
-## Repository
+The application uses **JWT-based authentication**.
 
-GitHub: https://github.com/ggthedeveloper/RailSamanvayAI
+The authentication flow is conceptually:
 
-------------------------------------------------------------------------
+```text
+User Login
+    ↓
+Credentials Validation
+    ↓
+JWT Generation
+    ↓
+Authenticated API Requests
+    ↓
+Protected Resources
+```
 
-```{=html}
+Passwords and authentication credentials should be handled securely and should never be stored as plain text.
+
+---
+
+# Database
+
+The application supports:
+
+### SQLite
+
+Suitable for:
+
+* Local development
+* Prototype demonstrations
+* Lightweight testing
+
+### PostgreSQL
+
+Suitable for:
+
+* Production-oriented deployments
+* Multi-user environments
+* Scalable data storage
+
+Database schema changes are managed through **Alembic migrations**.
+
+---
+
+# Key Performance Dimensions
+
+The system can be evaluated using several categories of metrics.
+
+## Machine Learning
+
+Possible evaluation metrics include:
+
+* Accuracy
+* Precision
+* Recall
+* F1-score
+* ROC-AUC
+* Calibration quality
+
+Because failure prediction is used for prioritisation, probability quality and class-specific performance are particularly important.
+
+---
+
+## Optimisation
+
+The scheduling engine can be evaluated using:
+
+* Number of critical tasks completed
+* Block utilisation
+* Resource utilisation
+* Number of conflicts
+* Constraint violations
+* Total maintenance duration
+* Unscheduled critical tasks
+
+---
+
+## Operational Planning
+
+Additional evaluation dimensions include:
+
+* Reduction in scheduling conflicts
+* Maintenance coverage
+* Asset-risk coverage
+* Resource feasibility
+* Schedule stability
+
+---
+
+# Validation Strategy
+
+The prototype should be evaluated in stages.
+
+### Stage 1 — Data Validation
+
+Verify:
+
+* Missing values
+* Invalid records
+* Time consistency
+* Asset identifiers
+* Maintenance durations
+* Resource requirements
+
+### Stage 2 — ML Validation
+
+Evaluate:
+
+* Predictive performance
+* Temporal generalisation
+* Calibration
+* Class imbalance
+
+### Stage 3 — Optimisation Validation
+
+Verify that generated schedules satisfy all hard constraints.
+
+### Stage 4 — Scenario Testing
+
+Test the optimiser under different conditions:
+
+```text
+Normal Capacity
+Reduced Crew Availability
+High Maintenance Demand
+Reduced Possession Windows
+Multiple High-Risk Assets
+Conflicting Maintenance Requests
+```
+
+---
+
+# Example Planning Scenario
+
+Consider a railway section containing several assets:
+
+```text
+Asset A → High predicted failure risk
+Asset B → Medium predicted failure risk
+Asset C → Low predicted failure risk
+```
+
+Available maintenance window:
+
+```text
+22:00 – 02:00
+```
+
+Available resources:
+
+```text
+2 Maintenance Crews
+```
+
+The optimiser evaluates the available maintenance activities and determines which combination can be executed within the available window.
+
+For example:
+
+```text
+22:00 ───────────────────────── 02:00
+
+Crew 1:
+[──── Asset A Maintenance ────]
+
+Crew 2:
+[── Asset B Maintenance ──]
+```
+
+If two activities require the same unavailable resource, exceed the block duration, or violate another constraint, the optimiser must find an alternative feasible allocation.
+
+The result is therefore not simply:
+
+> "Perform the highest-risk task."
+
+It is:
+
+> "Select the most valuable feasible combination of maintenance tasks under the available operational constraints."
+
+---
+
+# Why Machine Learning + Optimisation?
+
+Machine Learning and optimisation solve different parts of the problem.
+
+### Machine Learning
+
+Answers:
+
+> **What is likely to happen?**
+
+For example:
+
+```text
+Probability of failure within 30 days = 0.82
+```
+
+### Optimisation
+
+Answers:
+
+> **What should we schedule given the available constraints?**
+
+For example:
+
+```text
+Available block = 4 hours
+Available crews = 2
+Tasks = 8
+```
+
+The optimiser determines the feasible combination.
+
+Therefore:
+
+```text
+Machine Learning
+       +
+Optimisation
+       ↓
+Intelligent Maintenance Planning
+```
+
+---
+
+# Advantages of the Proposed Architecture
+
+## Risk-Aware
+
+Uses predicted future failure risk rather than relying exclusively on static priorities.
+
+## Constraint-Aware
+
+Generates plans while respecting operational and resource constraints.
+
+## Scalable Architecture
+
+Separates:
+
+* Data
+* ML
+* Optimisation
+* Backend
+* Frontend
+
+so that individual components can evolve independently.
+
+## Human-Centric
+
+The system assists railway planners rather than replacing operational authority.
+
+## Explainable Workflow
+
+The planning process can be decomposed into:
+
+```text
+Risk
+ ↓
+Priority
+ ↓
+Candidate Blocks
+ ↓
+Constraints
+ ↓
+Optimisation
+ ↓
+Recommendation
+```
+
+---
+
+# Current Limitations
+
+RailSamanvayAI is currently a **prototype / decision-support demonstration**.
+
+### Data Limitation
+
+The prototype does not rely on live, confidential Indian Railways operational data.
+
+### Operational Validation
+
+A production railway system would require extensive testing and validation under real operational conditions.
+
+### Safety Certification
+
+The current prototype is not safety-certified and must not be connected directly to railway control systems.
+
+### Model Generalisation
+
+Machine-learning performance depends on the quality, quantity and representativeness of the available training data.
+
+### Real-Time Integration
+
+Full real-time train movement and disruption data integration is outside the current prototype scope.
+
+---
+
+# Future Scope
+
+## 1. Real-Time Railway Data Integration
+
+Integrate authorised real-time:
+
+* Train movement
+* Asset health
+* Maintenance
+* Possession
+* Network status
+
+data.
+
+---
+
+## 2. Real-Time Re-Optimisation
+
+When unexpected events occur, the system could automatically regenerate the maintenance plan.
+
+```text
+Initial Schedule
+       ↓
+Unexpected Event
+       ↓
+Updated Constraints
+       ↓
+Re-Optimisation
+       ↓
+Updated Schedule
+```
+
+---
+
+## 3. What-If Simulation
+
+Controllers could test alternative scenarios before approving a plan.
+
+Examples:
+
+```text
+What if a crew becomes unavailable?
+
+What if the block is shortened?
+
+What if a high-risk asset requires urgent maintenance?
+
+What if a train is delayed?
+
+What if multiple maintenance requests arrive simultaneously?
+```
+
+---
+
+## 4. Explainable AI
+
+Provide explanations for predicted asset risk and maintenance prioritisation.
+
+---
+
+## 5. Advanced Resource Optimisation
+
+Extend the model to include:
+
+* Crew skills
+* Equipment
+* Tools
+* Material availability
+* Travel time
+* Crew positioning
+
+---
+
+## 6. Multi-Corridor Planning
+
+Extend the optimisation engine to coordinate maintenance across multiple railway corridors simultaneously.
+
+---
+
+## 7. Predictive Maintenance Integration
+
+Integrate continuous asset-health signals to update failure probabilities dynamically.
+
+---
+
+## 8. Audit & Governance
+
+Maintain complete records of:
+
+* AI recommendations
+* Optimisation runs
+* Human modifications
+* Approved schedules
+* Schedule changes
+
+This would support accountability and operational traceability.
+
+---
+
+# Safety & Governance
+
+RailSamanvayAI should be treated as a **decision-support layer**.
+
+It should not directly control:
+
+* Railway signalling
+* Train movement
+* Safety-critical infrastructure
+* Real-world railway control systems
+
+Any real-world deployment would require appropriate:
+
+* Safety validation
+* Cybersecurity assessment
+* Data governance
+* Operational testing
+* Domain-expert review
+* Regulatory approval
+* Human oversight
+
+---
+
+# Project Documentation
+
+Additional project documentation is available in:
+
+```text
+docs/
+```
+
+This directory can contain:
+
+* System architecture
+* ML documentation
+* Optimisation formulation
+* API documentation
+* Database design
+* Deployment information
+* Testing documentation
+
+---
+
+# Contribution
+
+Contributions are welcome.
+
+A typical contribution workflow is:
+
+```bash
+git checkout -b feature/<feature-name>
+
+# Make changes
+
+git add .
+
+git commit -m "Add <feature-name>"
+
+git push origin feature/<feature-name>
+```
+
+Then create a Pull Request describing:
+
+* What was changed
+* Why it was changed
+* How it was tested
+* Any limitations or dependencies
+
+---
+
+# License
+
+Refer to the repository's license file for the applicable licensing terms.
+
+---
+
+# Disclaimer
+
+RailSamanvayAI is an academic and hackathon-oriented prototype developed to demonstrate the application of Artificial Intelligence and optimisation techniques to railway maintenance planning.
+
+The system does not claim access to confidential or live Indian Railways operational systems.
+
+The recommendations generated by the prototype are intended for demonstration and decision-support purposes only and must not be used for actual railway operations without appropriate validation, authorisation, safety procedures and human oversight.
+
+---
+
+# 📌 Project Details
+
+| Field               | Details                                     |
+| ------------------- | ------------------------------------------- |
+| Project Name        | RailSamanvayAI                              |
+| Problem ID          | SIH26027                                    |
+| Ministry            | Ministry of Railways                        |
+| Theme               | Transportation & Logistics                  |
+| Domain              | AI / ML / Optimisation / Railway Operations |
+| Application Type    | Decision-Support System                     |
+| ML Task             | Future Failure Risk Prediction              |
+| Optimisation        | Constraint-Based Maintenance Scheduling     |
+| Backend             | FastAPI                                     |
+| Frontend            | React                                       |
+| Database            | SQLite / PostgreSQL                         |
+| Optimisation Engine | Google OR-Tools CP-SAT                      |
+| Geospatial Engine   | Leaflet                                     |
+
+---
+
+# 🔗 Repository
+
+**GitHub:**
+https://github.com/ggthedeveloper/RailSamanvayAI
+
+---
+
 <p align="center">
-```
-`<strong>`{=html}RailSamanvayAI`</strong>`{=html}`<br>`{=html} Plan
-Smarter. Coordinate Better. Keep Railways Moving.
-```{=html}
+
+### RailSamanvayAI
+
+**Predict Risk. Optimise Blocks. Maximise Asset Availability.**
+
+# Contributors
+
+RailSamanvayAI is developed collaboratively by a multidisciplinary student team.
+
+| Contributor                | Role        |
+| -------------------------- | ----------- |
+| **Gaurav Gautam**          | Team Member |
+| **Debosmita Mukhopadhyay** | Team Leader |
+| **Shashwat Sahu**          | Team Member |
+| **Parinita Ramsagar**      | Team Member |
+| **Likhita Ganga**          | Team Member |
+| **Shubham Sagar**          | Team Member |
+
+
+The team collaboratively contributed to the ideation, system design, data engineering, machine-learning pipeline, optimisation framework, application development, testing, documentation, and overall implementation of RailSamanvayAI.
+
+
 </p>
-```
