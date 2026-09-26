@@ -1,310 +1,931 @@
 import React, { FormEvent, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
-import { Train, ShieldCheck, RefreshCw, KeyRound, Mail, User, Sparkles } from 'lucide-react';
-import { API_URL, theme, cardStyle, inputStyle, buttonPrimary, apiError } from '../theme';
+import {
+  Train, Shield, CheckCircle2, AlertTriangle, RefreshCw,
+  Mail, KeyRound, ArrowLeft, Eye, EyeOff, Sparkles, UserCheck,
+  HelpCircle, X
+} from 'lucide-react';
+import { API_URL, apiError } from '../theme';
 
-export function Login({ setToken }: { setToken: (token: string) => void }) {
-  const [email, setEmail] = useState('debosmita12@gmail.com');
-  const [password, setPassword] = useState('admin123');
-  const [fullName, setFullName] = useState('Chief Controller');
-  const [isRegister, setIsRegister] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+type RoleType = 'controller' | 'planner';
+
+interface LoginProps {
+  setToken: (token: string) => void;
+}
+
+export function Login({ setToken }: LoginProps) {
   const navigate = useNavigate();
 
-  async function submit(e: FormEvent) {
+  // Role Selection State
+  const [selectedRole, setSelectedRole] = useState<RoleType>('controller');
+
+  // Form Field States
+  const [email, setEmail] = useState('debosmita12@gmail.com');
+  const [password, setPassword] = useState('admin123');
+  const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(true);
+
+  // Status & Modal States
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [demoNotice, setDemoNotice] = useState('');
+  const [showForgotModal, setShowForgotModal] = useState(false);
+
+  // Demo Credentials Map
+  const demoAccounts = {
+    controller: {
+      email: 'debosmita12@gmail.com',
+      password: 'admin123',
+      label: 'Chief Controller / Admin'
+    },
+    planner: {
+      email: 'shashwat75@gmail.com',
+      password: '123456',
+      label: 'Section Planner'
+    }
+  };
+
+  // Switch role and update default demo credentials
+  const handleRoleSelect = (role: RoleType) => {
+    setSelectedRole(role);
+    setError('');
+    setDemoNotice('');
+  };
+
+  // Populate credentials subtly
+  const handleLoadDemoCredentials = () => {
+    const creds = demoAccounts[selectedRole];
+    setEmail(creds.email);
+    setPassword(creds.password);
+    setError('');
+    setDemoNotice(`Loaded credentials for ${creds.label}`);
+    setTimeout(() => setDemoNotice(''), 3500);
+  };
+
+  // Submission handler
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError('');
+    setDemoNotice('');
 
     try {
       const cleanEmail = email.trim().toLowerCase();
-      if (isRegister) {
-        await axios.post(`${API_URL}/auth/register`, {
-          email: cleanEmail,
-          password,
-          full_name: fullName.trim() || 'Chief Controller'
-        });
-      }
+      const form = new URLSearchParams({
+        username: cleanEmail,
+        password: password
+      });
 
-      const form = new URLSearchParams({ username: cleanEmail, password });
-      const { data } = await axios.post<{ access_token: string }>(
+      const { data } = await axios.post<{ access_token: string; token_type: string }>(
         `${API_URL}/auth/token`,
         form,
         { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
       );
 
       if (!data.access_token) {
-        throw new Error('No access token received.');
+        throw new Error('No authorization token received from server.');
       }
 
-      localStorage.setItem('token', data.access_token);
+      if (rememberMe) {
+        localStorage.setItem('token', data.access_token);
+      } else {
+        sessionStorage.setItem('token', data.access_token);
+        localStorage.setItem('token', data.access_token); // maintain existing compatibility
+      }
+
       setToken(data.access_token);
       navigate('/overview');
     } catch (err) {
-      setError(apiError(err, 'Authentication failed. Please verify your credentials.'));
+      setError(apiError(err, 'Authentication failed. Please verify your railway email and password.'));
     } finally {
       setLoading(false);
     }
-  }
-
-  const quickFill = (userEmail: string, pass: string, name: string) => {
-    setEmail(userEmail);
-    setPassword(pass);
-    setFullName(name);
-    setError('');
   };
 
   return (
     <div style={{
       minHeight: '100vh',
       display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
+      flexDirection: 'column',
       position: 'relative',
-      background: '#0f172a',
-      padding: 20,
-      overflow: 'hidden'
+      background: '#070f1e',
+      fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
+      color: '#0f172a',
+      overflowX: 'hidden'
     }}>
-      {/* High-resolution Railway Background Image Layer */}
+      {/* ------------------------------------------------------------------ */}
+      {/* BACKGROUND PHOTOGRAPH & TRANSLUCENT OVERLAYS */}
+      {/* ------------------------------------------------------------------ */}
+      <picture style={{
+        position: 'absolute',
+        inset: 0,
+        zIndex: 0,
+        pointerEvents: 'none'
+      }}>
+        <source srcSet="/indian_railway_hd.webp" type="image/webp" />
+        <img
+          src="/indian_railway_hd.jpg"
+          alt="Indian Railways WAP-7 Locomotive"
+          style={{
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover',
+            objectPosition: 'center 40%',
+            display: 'block'
+          }}
+        />
+      </picture>
+
+      {/* Deep Navy Translucent Gradient Overlay */}
       <div style={{
         position: 'absolute',
         inset: 0,
-        backgroundImage: "url('/train_landscape.png')",
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        opacity: 0.32,
-        zIndex: 0
-      }} />
-      <div style={{
-        position: 'absolute',
-        inset: 0,
-        background: 'radial-gradient(ellipse at 50% 40%, rgba(15,23,42,0.6) 0%, rgba(15,23,42,0.95) 100%)',
-        zIndex: 1
+        background: 'linear-gradient(135deg, rgba(7, 15, 30, 0.94) 0%, rgba(7, 15, 30, 0.88) 45%, rgba(10, 25, 47, 0.76) 80%, rgba(15, 23, 42, 0.65) 100%)',
+        zIndex: 1,
+        pointerEvents: 'none'
       }} />
 
-      <div style={{
-        ...cardStyle,
+      {/* ------------------------------------------------------------------ */}
+      {/* TOP HEADER */}
+      {/* ------------------------------------------------------------------ */}
+      <header style={{
         position: 'relative',
-        zIndex: 2,
-        width: '100%',
-        maxWidth: 460,
-        padding: '36px 32px',
-        background: 'rgba(255, 255, 255, 0.96)',
-        backdropFilter: 'blur(16px)',
-        WebkitBackdropFilter: 'blur(16px)',
-        border: `1px solid rgba(255, 255, 255, 0.8)`,
-        boxShadow: '0 20px 50px rgba(0,0,0,0.3)'
+        zIndex: 10,
+        padding: '18px 32px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+        background: 'rgba(7, 15, 30, 0.45)',
+        backdropFilter: 'blur(8px)',
+        WebkitBackdropFilter: 'blur(8px)'
       }}>
-        {/* Logo & Header */}
-        <div style={{ textAlign: 'center', marginBottom: 24 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <div style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            width: 64,
-            height: 64,
+            width: 40,
+            height: 40,
             borderRadius: '50%',
             background: '#ffffff',
-            boxShadow: '0 4px 18px rgba(37,99,235,0.2), 0 1px 3px rgba(0,0,0,0.08)',
-            border: '2px solid #dbeafe',
-            padding: 3,
-            margin: '0 auto 14px auto'
+            boxShadow: '0 2px 10px rgba(37, 99, 235, 0.3)',
+            border: '1.5px solid #dbeafe',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center'
           }}>
-            <Train size={38} color={theme.blue} strokeWidth={1.8} aria-label="Railway" />
+            <Train size={24} color="#1d4ed8" strokeWidth={2} />
           </div>
-          <h1 style={{ margin: 0, fontSize: 26, fontWeight: 800, color: theme.text, letterSpacing: '-0.02em' }}>
-            RailSamanvayAI
-          </h1>
-          <p style={{ margin: '6px 0 0', fontSize: 12, color: theme.blue, fontWeight: 700, letterSpacing: '0.06em' }}>
-            AUTOMATIC RAILWAY BLOCK PLANNING SYSTEM
-          </p>
-          <div style={{
+          <div>
+            <div style={{ fontSize: 11, fontWeight: 700, color: '#93c5fd', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+              INDIAN RAILWAYS
+            </div>
+            <div style={{ fontSize: 18, fontWeight: 800, color: '#ffffff', letterSpacing: '-0.02em', lineHeight: 1.1 }}>
+              RailSamanvayAI
+            </div>
+          </div>
+        </div>
+
+        <Link
+          to="/"
+          style={{
             display: 'inline-flex',
             alignItems: 'center',
             gap: 6,
-            marginTop: 10,
-            padding: '4px 10px',
-            background: 'rgba(16, 185, 129, 0.1)',
-            border: '1px solid rgba(16, 185, 129, 0.3)',
-            borderRadius: 20,
-            fontSize: 11,
-            color: theme.green,
-            fontWeight: 600
-          }}>
-            <span style={{ width: 6, height: 6, borderRadius: '50%', background: theme.green, display: 'inline-block' }} />
-            CENTRAL OPERATIONS CONTROL PORTAL
-          </div>
-        </div>
-
-        {/* Quick Fill Preset Buttons */}
-        <div style={{
-          background: theme.bg,
-          border: `1px solid ${theme.border}`,
-          borderRadius: 8,
-          padding: 10,
-          marginBottom: 18,
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 6
-        }}>
-          <div style={{ fontSize: 10, fontWeight: 800, color: theme.textDim, letterSpacing: '0.05em', textTransform: 'uppercase' }}>
-            Quick-Fill Demo Credentials
-          </div>
-          <div style={{ display: 'flex', gap: 8 }}>
-            <button
-              type="button"
-              onClick={() => quickFill('debosmita12@gmail.com', 'admin123', 'Chief Controller')}
-              style={{
-                flex: 1,
-                padding: '6px 8px',
-                background: 'rgba(56, 189, 248, 0.1)',
-                border: `1px solid ${theme.cyan}44`,
-                borderRadius: 6,
-                color: theme.cyan,
-                fontSize: 11,
-                fontWeight: 600,
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: 5
-              }}
-            >
-              <Sparkles size={12} />
-              Admin (Chief Controller)
-            </button>
-            <button
-              type="button"
-              onClick={() => quickFill('shashwat75@gmail.com', '123456', 'Shashwat Sahu')}
-              style={{
-                flex: 1,
-                padding: '6px 8px',
-                background: 'rgba(167, 139, 250, 0.1)',
-                border: `1px solid ${theme.purple}44`,
-                borderRadius: 6,
-                color: theme.purple,
-                fontSize: 11,
-                fontWeight: 600,
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: 5
-              }}
-            >
-              <User size={12} />
-              Section Planner
-            </button>
-          </div>
-        </div>
-
-        {error && (
-          <div style={{
-            padding: 12,
-            background: 'rgba(239, 68, 68, 0.15)',
-            border: '1px solid rgba(239, 68, 68, 0.4)',
-            borderRadius: 8,
-            color: '#fca5a5',
+            padding: '7px 14px',
+            borderRadius: 7,
+            background: 'rgba(255, 255, 255, 0.08)',
+            border: '1px solid rgba(255, 255, 255, 0.16)',
+            color: '#e2e8f0',
             fontSize: 12,
-            marginBottom: 16
-          }}>
-            {error}
-          </div>
-        )}
+            fontWeight: 600,
+            textDecoration: 'none',
+            transition: 'all 0.15s ease'
+          }}
+          onMouseEnter={e => {
+            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.16)';
+            e.currentTarget.style.color = '#ffffff';
+          }}
+          onMouseLeave={e => {
+            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
+            e.currentTarget.style.color = '#e2e8f0';
+          }}
+        >
+          <ArrowLeft size={14} />
+          Back to Overview
+        </Link>
+      </header>
 
-        <form onSubmit={submit} style={{ display: 'grid', gap: 14 }}>
-          {isRegister && (
-            <div>
-              <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, color: theme.textMuted, fontWeight: 700, marginBottom: 6, textTransform: 'uppercase' }}>
-                <User size={13} color={theme.cyan} />
-                Full Name & Designation
-              </label>
-              <input
-                style={inputStyle}
-                value={fullName}
-                onChange={e => setFullName(e.target.value)}
-                placeholder="e.g. Chief Controller (Operating)"
-                required
-              />
-            </div>
-          )}
-
-          <div>
-            <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, color: theme.textMuted, fontWeight: 700, marginBottom: 6, textTransform: 'uppercase' }}>
-              <Mail size={13} color={theme.cyan} />
-              Railway Controller Email
-            </label>
-            <input
-              style={inputStyle}
-              type="email"
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-              placeholder="debosmita12@gmail.com"
-              required
-            />
-          </div>
-
-          <div>
-            <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, color: theme.textMuted, fontWeight: 700, marginBottom: 6, textTransform: 'uppercase' }}>
-              <KeyRound size={13} color={theme.cyan} />
-              Access Key / Password
-            </label>
-            <input
-              style={inputStyle}
-              type="password"
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-              placeholder="••••••••"
-              required
-            />
-          </div>
-
-          <button
-            type="submit"
-            style={{ ...buttonPrimary, width: '100%', marginTop: 8 }}
-            disabled={loading}
-          >
-            {loading ? <RefreshCw size={16} className="animate-spin" /> : <ShieldCheck size={16} />}
-            {loading ? 'Authenticating…' : isRegister ? 'Register Controller Account' : 'Sign In to Operations Console'}
-          </button>
-        </form>
-
-        <div style={{ marginTop: 18, textAlign: 'center' }}>
-          <button
-            type="button"
-            onClick={() => { setIsRegister(!isRegister); setError(''); }}
-            style={{ background: 'none', border: 0, color: theme.cyan, fontSize: 12, cursor: 'pointer', textDecoration: 'underline' }}
-          >
-            {isRegister ? 'Already registered? Sign in' : 'Create new Controller / Planner profile'}
-          </button>
-        </div>
-
-        <div style={{ marginTop: 14, textAlign: 'center' }}>
-          <button
-            type="button"
-            onClick={() => navigate('/')}
-            style={{
-              background: 'none',
-              border: 0,
-              color: '#64748b',
-              fontSize: 12,
-              fontWeight: 600,
-              cursor: 'pointer',
+      {/* ------------------------------------------------------------------ */}
+      {/* MAIN 2-COLUMN SECTION */}
+      {/* ------------------------------------------------------------------ */}
+      <div style={{
+        position: 'relative',
+        zIndex: 10,
+        flex: 1,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '36px 24px 20px',
+        boxSizing: 'border-box'
+      }}>
+        <div style={{
+          width: '100%',
+          maxWidth: 1120,
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+          gap: 48,
+          alignItems: 'center'
+        }}>
+          {/* LEFT COLUMN: BRANDING & SYSTEM OVERVIEW */}
+          <div style={{ color: '#ffffff', padding: '10px 4px' }}>
+            {/* Government of India Insignia Tag */}
+            <div style={{
               display: 'inline-flex',
               alignItems: 'center',
-              gap: 4
-            }}
-          >
-            ← Return to RailSamanvayAI Overview
-          </button>
-        </div>
+              gap: 8,
+              padding: '5px 12px',
+              borderRadius: 20,
+              background: 'rgba(255, 255, 255, 0.1)',
+              border: '1px solid rgba(255, 255, 255, 0.18)',
+              fontSize: 11,
+              fontWeight: 700,
+              letterSpacing: '0.06em',
+              color: '#93c5fd',
+              marginBottom: 16
+            }}>
+              <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#38bdf8' }} />
+              GOVERNMENT OF INDIA • MINISTRY OF RAILWAYS
+            </div>
 
-        <div style={{ marginTop: 22, paddingTop: 14, borderTop: `1px solid ${theme.border}`, fontSize: 11, color: theme.textDim, textAlign: 'center' }}>
-          Ministry of Railways · Problem ID: SIH26027
+            <div style={{
+              fontSize: 14,
+              fontWeight: 700,
+              color: '#60a5fa',
+              letterSpacing: '0.12em',
+              textTransform: 'uppercase',
+              marginBottom: 4
+            }}>
+              INDIAN RAILWAYS
+            </div>
+
+            <h1 style={{
+              fontSize: 'clamp(28px, 4vw, 42px)',
+              fontWeight: 900,
+              letterSpacing: '-0.025em',
+              lineHeight: 1.15,
+              margin: '0 0 14px',
+              color: '#ffffff'
+            }}>
+              RailSamanvayAI
+            </h1>
+
+            <p style={{
+              fontSize: 16,
+              lineHeight: 1.55,
+              color: '#cbd5e1',
+              margin: '0 0 28px',
+              maxWidth: 480
+            }}>
+              AI-Powered Automatic Block Planning for Railway Maintenance
+            </p>
+
+            {/* 3 Core Highlights */}
+            <div style={{ display: 'grid', gap: 16, maxWidth: 500, marginBottom: 32 }}>
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+                <div style={{
+                  width: 32,
+                  height: 32,
+                  borderRadius: 8,
+                  background: 'rgba(37, 99, 235, 0.25)',
+                  border: '1px solid rgba(96, 165, 250, 0.4)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0,
+                  marginTop: 2
+                }}>
+                  <CheckCircle2 size={16} color="#60a5fa" />
+                </div>
+                <div>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: '#f1f5f9' }}>
+                    Precision Block Allocation
+                  </div>
+                  <div style={{ fontSize: 12, color: '#94a3b8', lineHeight: 1.45, marginTop: 2 }}>
+                    Automated conflict-free maintenance windows harmonized across Operating, Engineering, S&amp;T, and TRD divisions.
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+                <div style={{
+                  width: 32,
+                  height: 32,
+                  borderRadius: 8,
+                  background: 'rgba(37, 99, 235, 0.25)',
+                  border: '1px solid rgba(96, 165, 250, 0.4)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0,
+                  marginTop: 2
+                }}>
+                  <Shield size={16} color="#60a5fa" />
+                </div>
+                <div>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: '#f1f5f9' }}>
+                    Corridor Safety &amp; Punctuality
+                  </div>
+                  <div style={{ fontSize: 12, color: '#94a3b8', lineHeight: 1.45, marginTop: 2 }}>
+                    Constraint-optimized machine scheduling preserving trunk passenger &amp; freight timetables with live conflict telemetry.
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+                <div style={{
+                  width: 32,
+                  height: 32,
+                  borderRadius: 8,
+                  background: 'rgba(37, 99, 235, 0.25)',
+                  border: '1px solid rgba(96, 165, 250, 0.4)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0,
+                  marginTop: 2
+                }}>
+                  <UserCheck size={16} color="#60a5fa" />
+                </div>
+                <div>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: '#f1f5f9' }}>
+                    Unified Digital Authorization
+                  </div>
+                  <div style={{ fontSize: 12, color: '#94a3b8', lineHeight: 1.45, marginTop: 2 }}>
+                    Role-specific possession sign-offs for Chief Controllers and Section Planners under Indian Railways General Rules.
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Team Attribution & SIH Details */}
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 16,
+              paddingTop: 18,
+              borderTop: '1px solid rgba(255, 255, 255, 0.12)',
+              fontSize: 12,
+              color: '#94a3b8'
+            }}>
+              <div>
+                Developed by <strong style={{ color: '#ffffff' }}>The Steel Bytes 800</strong>
+              </div>
+              <span style={{ color: 'rgba(255,255,255,0.2)' }}>•</span>
+              <div>
+                Smart India Hackathon 2026 • <strong style={{ color: '#38bdf8' }}>SIH26027</strong>
+              </div>
+            </div>
+          </div>
+
+          {/* RIGHT COLUMN: AUTHENTICATION PANEL */}
+          <div style={{
+            background: 'rgba(255, 255, 255, 0.98)',
+            backdropFilter: 'blur(16px)',
+            WebkitBackdropFilter: 'blur(16px)',
+            border: '1px solid rgba(255, 255, 255, 0.9)',
+            borderRadius: 16,
+            padding: '34px 30px',
+            boxShadow: '0 25px 60px -15px rgba(0, 0, 0, 0.45)',
+            width: '100%',
+            maxWidth: 480,
+            justifySelf: 'center',
+            boxSizing: 'border-box'
+          }}>
+            {/* Card Header */}
+            <div style={{ marginBottom: 20 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+                <div style={{
+                  width: 36,
+                  height: 36,
+                  borderRadius: 10,
+                  background: '#eff6ff',
+                  border: '1px solid #bfdbfe',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0
+                }}>
+                  <Train size={20} color="#2563eb" />
+                </div>
+                <div>
+                  <h2 style={{
+                    margin: 0,
+                    fontSize: 22,
+                    fontWeight: 800,
+                    letterSpacing: '-0.02em',
+                    color: '#0f172a'
+                  }}>
+                    Welcome Back
+                  </h2>
+                  <p style={{
+                    margin: '2px 0 0',
+                    fontSize: 12,
+                    color: '#64748b',
+                    fontWeight: 500
+                  }}>
+                    Sign in to access Central Operations Console
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Role Selection Tabs */}
+            <div style={{ marginBottom: 14 }}>
+              <div style={{
+                fontSize: 11,
+                fontWeight: 700,
+                color: '#64748b',
+                textTransform: 'uppercase',
+                letterSpacing: '0.04em',
+                marginBottom: 6
+              }}>
+                Login Role
+              </div>
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: '1fr 1fr',
+                gap: 6,
+                background: '#f1f5f9',
+                padding: 4,
+                borderRadius: 9,
+                border: '1px solid #e2e8f0'
+              }}>
+                <button
+                  type="button"
+                  onClick={() => handleRoleSelect('controller')}
+                  style={{
+                    padding: '8px 10px',
+                    borderRadius: 7,
+                    fontSize: 12,
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    border: 0,
+                    background: selectedRole === 'controller' ? '#1e40af' : 'transparent',
+                    color: selectedRole === 'controller' ? '#ffffff' : '#475569',
+                    boxShadow: selectedRole === 'controller' ? '0 1px 3px rgba(30, 64, 175, 0.3)' : 'none',
+                    transition: 'all 0.15s ease',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 6
+                  }}
+                >
+                  <Shield size={14} />
+                  Chief Controller
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleRoleSelect('planner')}
+                  style={{
+                    padding: '8px 10px',
+                    borderRadius: 7,
+                    fontSize: 12,
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    border: 0,
+                    background: selectedRole === 'planner' ? '#1e40af' : 'transparent',
+                    color: selectedRole === 'planner' ? '#ffffff' : '#475569',
+                    boxShadow: selectedRole === 'planner' ? '0 1px 3px rgba(30, 64, 175, 0.3)' : 'none',
+                    transition: 'all 0.15s ease',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 6
+                  }}
+                >
+                  <UserCheck size={14} />
+                  Section Planner
+                </button>
+              </div>
+
+              {/* Dynamic Role Description Box */}
+              <div style={{
+                marginTop: 8,
+                padding: '8px 12px',
+                background: '#f8fafc',
+                border: '1px solid #e2e8f0',
+                borderRadius: 8,
+                fontSize: 11,
+                lineHeight: 1.4,
+                color: '#475569',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between'
+              }}>
+                <div>
+                  <strong style={{ color: '#0f172a' }}>
+                    {selectedRole === 'controller' ? 'Chief Controller / Admin: ' : 'Section Planner: '}
+                  </strong>
+                  <span>
+                    {selectedRole === 'controller'
+                      ? 'Central operations control, planning oversight and system-level decisions.'
+                      : 'Maintenance block planning, section-level scheduling and operational coordination.'}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Subtle Demo Credentials Button */}
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              padding: '7px 12px',
+              background: '#eff6ff',
+              border: '1px solid #dbeafe',
+              borderRadius: 8,
+              marginBottom: 16
+            }}>
+              <span style={{ fontSize: 11, color: '#1e40af', fontWeight: 600 }}>
+                Prototype demonstration mode
+              </span>
+              <button
+                type="button"
+                onClick={handleLoadDemoCredentials}
+                style={{
+                  background: '#ffffff',
+                  border: '1px solid #bfdbfe',
+                  borderRadius: 6,
+                  padding: '4px 9px',
+                  fontSize: 11,
+                  fontWeight: 700,
+                  color: '#1d4ed8',
+                  cursor: 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 5,
+                  boxShadow: '0 1px 2px rgba(0,0,0,0.04)'
+                }}
+                title="Autofill credentials for the currently selected role"
+              >
+                <Sparkles size={12} color="#2563eb" />
+                Use Demo Account
+              </button>
+            </div>
+
+            {/* Demo Notice Banner */}
+            {demoNotice && (
+              <div style={{
+                padding: '7px 12px',
+                background: '#ecfdf5',
+                border: '1px solid #a7f3d0',
+                borderRadius: 7,
+                fontSize: 11,
+                fontWeight: 600,
+                color: '#059669',
+                marginBottom: 14,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6
+              }}>
+                <CheckCircle2 size={13} color="#059669" />
+                <span>{demoNotice}</span>
+              </div>
+            )}
+
+            {/* Error Banner */}
+            {error && (
+              <div style={{
+                display: 'flex',
+                alignItems: 'flex-start',
+                gap: 10,
+                padding: '11px 13px',
+                background: '#fef2f2',
+                border: '1px solid #fecaca',
+                borderRadius: 8,
+                color: '#dc2626',
+                fontSize: 12,
+                lineHeight: 1.45,
+                marginBottom: 16
+              }}>
+                <AlertTriangle size={16} color="#dc2626" style={{ flexShrink: 0, marginTop: 1 }} />
+                <span>{error}</span>
+              </div>
+            )}
+
+            {/* Authentication Form */}
+            <form onSubmit={handleSubmit} style={{ display: 'grid', gap: 14 }}>
+              {/* Railway Email */}
+              <div>
+                <label style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  fontSize: 11,
+                  fontWeight: 700,
+                  color: '#475569',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.04em',
+                  marginBottom: 6
+                }}>
+                  <Mail size={13} color="#2563eb" />
+                  Railway Email Address
+                </label>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
+                  placeholder={selectedRole === 'controller' ? 'controller@railway.gov.in' : 'planner@railway.gov.in'}
+                  required
+                  style={{
+                    width: '100%',
+                    boxSizing: 'border-box',
+                    padding: '10px 12px',
+                    background: '#ffffff',
+                    border: '1px solid #cbd5e1',
+                    borderRadius: 8,
+                    color: '#0f172a',
+                    fontSize: 13,
+                    outline: 'none',
+                    transition: 'border-color 0.15s ease'
+                  }}
+                  onFocus={e => (e.target.style.borderColor = '#2563eb')}
+                  onBlur={e => (e.target.style.borderColor = '#cbd5e1')}
+                />
+              </div>
+
+              {/* Password */}
+              <div>
+                <label style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  fontSize: 11,
+                  fontWeight: 700,
+                  color: '#475569',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.04em',
+                  marginBottom: 6
+                }}>
+                  <KeyRound size={13} color="#2563eb" />
+                  Access Password
+                </label>
+                <div style={{ position: 'relative' }}>
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    value={password}
+                    onChange={e => setPassword(e.target.value)}
+                    placeholder="••••••••"
+                    required
+                    style={{
+                      width: '100%',
+                      boxSizing: 'border-box',
+                      padding: '10px 38px 10px 12px',
+                      background: '#ffffff',
+                      border: '1px solid #cbd5e1',
+                      borderRadius: 8,
+                      color: '#0f172a',
+                      fontSize: 13,
+                      outline: 'none',
+                      transition: 'border-color 0.15s ease'
+                    }}
+                    onFocus={e => (e.target.style.borderColor = '#2563eb')}
+                    onBlur={e => (e.target.style.borderColor = '#cbd5e1')}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    style={{
+                      position: 'absolute',
+                      right: 10,
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      background: 'none',
+                      border: 0,
+                      color: '#94a3b8',
+                      cursor: 'pointer',
+                      padding: 4,
+                      display: 'flex',
+                      alignItems: 'center'
+                    }}
+                    title={showPassword ? 'Hide password' : 'Show password'}
+                  >
+                    {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
+                  </button>
+                </div>
+              </div>
+
+              {/* Remember Me & Forgot Password Row */}
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                fontSize: 12
+              }}>
+                <label style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  color: '#475569',
+                  cursor: 'pointer',
+                  userSelect: 'none'
+                }}>
+                  <input
+                    type="checkbox"
+                    checked={rememberMe}
+                    onChange={e => setRememberMe(e.target.checked)}
+                    style={{ accentColor: '#2563eb', cursor: 'pointer' }}
+                  />
+                  Remember console
+                </label>
+
+                <button
+                  type="button"
+                  onClick={() => setShowForgotModal(true)}
+                  style={{
+                    background: 'none',
+                    border: 0,
+                    color: '#2563eb',
+                    cursor: 'pointer',
+                    fontSize: 12,
+                    fontWeight: 600,
+                    padding: 0
+                  }}
+                >
+                  Forgot password?
+                </button>
+              </div>
+
+              {/* Submit Button */}
+              <button
+                type="submit"
+                disabled={loading}
+                style={{
+                  marginTop: 6,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 8,
+                  padding: '12px 18px',
+                  background: '#2563eb',
+                  color: '#ffffff',
+                  border: '1px solid #1d4ed8',
+                  borderRadius: 8,
+                  fontWeight: 700,
+                  fontSize: 14,
+                  cursor: loading ? 'not-allowed' : 'pointer',
+                  boxShadow: '0 2px 6px rgba(37, 99, 235, 0.35)',
+                  transition: 'background 0.15s ease'
+                }}
+                onMouseEnter={e => {
+                  if (!loading) e.currentTarget.style.background = '#1d4ed8';
+                }}
+                onMouseLeave={e => {
+                  if (!loading) e.currentTarget.style.background = '#2563eb';
+                }}
+              >
+                {loading ? <RefreshCw size={16} className="animate-spin" /> : <Shield size={16} />}
+                {loading ? 'Authenticating with Central Operations…' : `Sign In as ${selectedRole === 'controller' ? 'Chief Controller' : 'Section Planner'}`}
+              </button>
+            </form>
+
+            {/* Bottom Links */}
+            <div style={{
+              marginTop: 20,
+              paddingTop: 16,
+              borderTop: '1px solid #e2e8f0',
+              textAlign: 'center',
+              fontSize: 13,
+              color: '#475569'
+            }}>
+              Don't have an account?{' '}
+              <Link
+                to="/register"
+                style={{
+                  color: '#2563eb',
+                  fontWeight: 700,
+                  textDecoration: 'none'
+                }}
+                onMouseEnter={e => (e.currentTarget.style.textDecoration = 'underline')}
+                onMouseLeave={e => (e.currentTarget.style.textDecoration = 'none')}
+              >
+                Register as Section Planner →
+              </Link>
+            </div>
+          </div>
         </div>
       </div>
+
+      {/* ------------------------------------------------------------------ */}
+      {/* FORGOT PASSWORD MODAL */}
+      {/* ------------------------------------------------------------------ */}
+      {showForgotModal && (
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          background: 'rgba(0, 0, 0, 0.6)',
+          backdropFilter: 'blur(4px)',
+          zIndex: 9999,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: 20
+        }}>
+          <div style={{
+            background: '#ffffff',
+            borderRadius: 14,
+            padding: '24px 26px',
+            maxWidth: 420,
+            width: '100%',
+            boxShadow: '0 20px 40px rgba(0,0,0,0.3)',
+            position: 'relative'
+          }}>
+            <button
+              onClick={() => setShowForgotModal(false)}
+              style={{
+                position: 'absolute',
+                top: 16,
+                right: 16,
+                background: 'none',
+                border: 0,
+                color: '#64748b',
+                cursor: 'pointer',
+                padding: 4
+              }}
+            >
+              <X size={18} />
+            </button>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+              <div style={{
+                width: 36,
+                height: 36,
+                borderRadius: 8,
+                background: '#eff6ff',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}>
+                <HelpCircle size={20} color="#2563eb" />
+              </div>
+              <h3 style={{ margin: 0, fontSize: 17, fontWeight: 800, color: '#0f172a' }}>
+                Credential Recovery
+              </h3>
+            </div>
+
+            <p style={{ fontSize: 13, color: '#475569', lineHeight: 1.5, margin: '0 0 16px' }}>
+              In accordance with Indian Railways IT Security Policies, automated password resets are disabled for operations personnel.
+            </p>
+
+            <div style={{
+              background: '#f8fafc',
+              border: '1px solid #e2e8f0',
+              borderRadius: 8,
+              padding: '12px 14px',
+              fontSize: 12,
+              color: '#334155',
+              lineHeight: 1.45,
+              marginBottom: 18
+            }}>
+              Please contact your <strong>Divisional Operating Control Office (DOM / Sr. DOM)</strong> or the <strong>Chief Controller Administration Desk</strong> to issue a verified temporary access key.
+            </div>
+
+            <button
+              onClick={() => setShowForgotModal(false)}
+              style={{
+                width: '100%',
+                padding: '9px 16px',
+                background: '#2563eb',
+                color: '#ffffff',
+                border: '1px solid #1d4ed8',
+                borderRadius: 8,
+                fontWeight: 700,
+                fontSize: 13,
+                cursor: 'pointer'
+              }}
+            >
+              Acknowledge &amp; Return
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ------------------------------------------------------------------ */}
+      {/* MINIMAL FOOTER */}
+      {/* ------------------------------------------------------------------ */}
+      <footer style={{
+        position: 'relative',
+        zIndex: 10,
+        padding: '16px 24px',
+        textAlign: 'center',
+        borderTop: '1px solid rgba(255, 255, 255, 0.08)',
+        background: 'rgba(7, 15, 30, 0.65)',
+        fontSize: 12,
+        color: '#94a3b8'
+      }}>
+        RailSamanvayAI • The Steel Bytes 800 • SIH26027
+      </footer>
     </div>
   );
 }

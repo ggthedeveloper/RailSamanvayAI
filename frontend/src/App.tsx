@@ -16,6 +16,7 @@ import { API_URL, theme, cardStyle, badgeStyle, buttonPrimary, authHeaders, apiE
 
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { Login } from './components/Login';
+import { Register } from './components/Register';
 import { LandingPage } from './components/LandingPage';
 import { MapView } from './components/MapView';
 import { RouteAnalyzer } from './components/RouteAnalyzer';
@@ -757,6 +758,10 @@ export default function App() {
         <Route
           path="/login"
           element={token ? <Navigate to="/overview" replace /> : <Login setToken={setToken} />}
+        />
+        <Route
+          path="/register"
+          element={token ? <Navigate to="/overview" replace /> : <Register setToken={setToken} />}
         />
         <Route
           path="/*"
