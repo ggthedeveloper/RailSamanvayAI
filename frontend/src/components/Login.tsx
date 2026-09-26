@@ -41,7 +41,7 @@ export function Login({ setToken }: { setToken: (token: string) => void }) {
 
       localStorage.setItem('token', data.access_token);
       setToken(data.access_token);
-      navigate('/');
+      navigate('/overview');
     } catch (err) {
       setError(apiError(err, 'Authentication failed. Please verify your credentials.'));
     } finally {
@@ -278,6 +278,26 @@ export function Login({ setToken }: { setToken: (token: string) => void }) {
             style={{ background: 'none', border: 0, color: theme.cyan, fontSize: 12, cursor: 'pointer', textDecoration: 'underline' }}
           >
             {isRegister ? 'Already registered? Sign in' : 'Create new Controller / Planner profile'}
+          </button>
+        </div>
+
+        <div style={{ marginTop: 14, textAlign: 'center' }}>
+          <button
+            type="button"
+            onClick={() => navigate('/')}
+            style={{
+              background: 'none',
+              border: 0,
+              color: '#64748b',
+              fontSize: 12,
+              fontWeight: 600,
+              cursor: 'pointer',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 4
+            }}
+          >
+            ← Return to RailSamanvayAI Overview
           </button>
         </div>
 

@@ -747,12 +747,16 @@ export default function App() {
     <BrowserRouter>
       <Routes>
         <Route
+          path="/"
+          element={<LandingPage setToken={setToken} />}
+        />
+        <Route
           path="/landing"
           element={<LandingPage setToken={setToken} />}
         />
         <Route
           path="/login"
-          element={token ? <Navigate to="/overview" replace /> : <LandingPage setToken={setToken} />}
+          element={token ? <Navigate to="/overview" replace /> : <Login setToken={setToken} />}
         />
         <Route
           path="/*"
@@ -766,7 +770,7 @@ export default function App() {
                 }}
               />
             ) : (
-              <LandingPage setToken={setToken} />
+              <Navigate to="/login" replace />
             )
           }
         />
