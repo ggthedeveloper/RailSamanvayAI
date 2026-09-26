@@ -79,7 +79,7 @@ export function MapView({
 }: MapViewProps) {
   const [tileError, setTileError] = useState(false);
   const [recenterTrigger, setRecenterTrigger] = useState(0);
-  const [mapLayer, setMapLayer] = useState<'google_roadmap' | 'google_satellite' | 'google_terrain' | 'carto'>('google_roadmap');
+  const [mapLayer, setMapLayer] = useState<'google_roadmap' | 'google_satellite' | 'google_terrain'>('google_roadmap');
   const [showRailOverlay, setShowRailOverlay] = useState(true);
 
   // Validate coordinates strictly: finite and within valid geographic bounds
@@ -272,7 +272,7 @@ export function MapView({
             <Layers size={13} color={theme.textDim} />
             <select
               value={mapLayer}
-              onChange={(e) => setMapLayer(e.target.value as 'google_roadmap' | 'google_satellite' | 'google_terrain' | 'carto')}
+              onChange={(e) => setMapLayer(e.target.value as 'google_roadmap' | 'google_satellite' | 'google_terrain')}
               style={{
                 border: 0,
                 background: 'transparent',
@@ -288,7 +288,6 @@ export function MapView({
               <option value="google_roadmap">Google Maps (Roadmap)</option>
               <option value="google_satellite">Google Maps (Satellite)</option>
               <option value="google_terrain">Google Maps (Terrain)</option>
-              <option value="carto">Carto Light</option>
             </select>
           </div>
 
@@ -470,16 +469,6 @@ export function MapView({
                 url={`https://mt{s}.google.com/vt/lyrs=p&x={x}&y={y}&z={z}&key=${GOOGLE_MAPS_API_KEY}`}
                 subdomains={['0', '1', '2', '3']}
                 maxZoom={20}
-                eventHandlers={{
-                  tileerror: () => setTileError(true)
-                }}
-              />
-            )}
-            {mapLayer === 'carto' && (
-              <TileLayer
-                key="carto"
-                attribution="&copy; OpenStreetMap contributors &copy; CARTO"
-                url="https://{s}.basemaps.cartocdn.com/rastertiles/light_all/{z}/{x}/{y}{r}.png"
                 eventHandlers={{
                   tileerror: () => setTileError(true)
                 }}

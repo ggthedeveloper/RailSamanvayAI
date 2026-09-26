@@ -104,13 +104,13 @@ export function Register({ setToken }: RegisterProps) {
       display: 'flex',
       flexDirection: 'column',
       position: 'relative',
-      background: '#0a1728',
+      background: '#07162c',
       fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
       color: '#0f172a',
       overflowX: 'hidden'
     }}>
       {/* ------------------------------------------------------------------ */}
-      {/* CLEAR HD INDIAN RAILWAYS PHOTOGRAPH (WAP-7 LOCOMOTIVE & INFRASTRUCTURE) */}
+      {/* CLEAR HD INDIAN RAILWAYS PHOTOGRAPH (WAP-7 LOCOMOTIVE, TRACKS, PLATFORM & VARANASI SIGN) */}
       {/* ------------------------------------------------------------------ */}
       <picture style={{
         position: 'absolute',
@@ -121,22 +121,22 @@ export function Register({ setToken }: RegisterProps) {
         <source srcSet="/indian_railway_hd.webp" type="image/webp" />
         <img
           src="/indian_railway_hd.jpg"
-          alt="Indian Railways Locomotive & Platform Infrastructure"
+          alt="Indian Railways Locomotive, Platform & Varanasi Station Infrastructure"
           style={{
             width: '100%',
             height: '100%',
             objectFit: 'cover',
-            objectPosition: 'center 40%',
+            objectPosition: 'center 35%',
             display: 'block'
           }}
         />
       </picture>
 
-      {/* Subtle Translucent Navy Overlay (0.48 - 0.58) preserving photograph visibility */}
+      {/* Subtle Translucent Navy Overlay (~20-30% dark overlay strength, 70-80% photograph visibility) */}
       <div style={{
         position: 'absolute',
         inset: 0,
-        background: 'linear-gradient(90deg, rgba(7, 20, 40, 0.62) 0%, rgba(7, 20, 40, 0.50) 45%, rgba(7, 20, 40, 0.44) 100%)',
+        background: 'linear-gradient(90deg, rgba(5, 20, 45, 0.55) 0%, rgba(5, 20, 45, 0.35) 45%, rgba(5, 20, 45, 0.18) 100%)',
         zIndex: 1,
         pointerEvents: 'none'
       }} />
@@ -151,10 +151,10 @@ export function Register({ setToken }: RegisterProps) {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        borderBottom: '1px solid rgba(255, 255, 255, 0.12)',
-        background: 'rgba(7, 20, 40, 0.40)',
-        backdropFilter: 'blur(6px)',
-        WebkitBackdropFilter: 'blur(6px)'
+        borderBottom: '1px solid rgba(255, 255, 255, 0.15)',
+        background: 'rgba(5, 20, 45, 0.45)',
+        backdropFilter: 'blur(8px)',
+        WebkitBackdropFilter: 'blur(8px)'
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <div style={{
@@ -188,21 +188,21 @@ export function Register({ setToken }: RegisterProps) {
             gap: 6,
             padding: '7px 14px',
             borderRadius: 7,
-            background: 'rgba(255, 255, 255, 0.12)',
-            border: '1px solid rgba(255, 255, 255, 0.22)',
-            color: '#f1f5f9',
+            background: 'rgba(255, 255, 255, 0.15)',
+            border: '1px solid rgba(255, 255, 255, 0.25)',
+            color: '#f8fafc',
             fontSize: 12,
             fontWeight: 600,
             textDecoration: 'none',
             transition: 'all 0.15s ease'
           }}
           onMouseEnter={e => {
-            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.22)';
+            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.25)';
             e.currentTarget.style.color = '#ffffff';
           }}
           onMouseLeave={e => {
-            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.12)';
-            e.currentTarget.style.color = '#f1f5f9';
+            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.15)';
+            e.currentTarget.style.color = '#f8fafc';
           }}
         >
           <ArrowLeft size={14} />
@@ -238,10 +238,12 @@ export function Register({ setToken }: RegisterProps) {
               display: 'inline-flex',
               alignItems: 'center',
               gap: 8,
-              padding: '5px 12px',
+              padding: '6px 14px',
               borderRadius: 20,
-              background: 'rgba(255, 255, 255, 0.14)',
-              border: '1px solid rgba(255, 255, 255, 0.24)',
+              background: 'rgba(5, 20, 45, 0.55)',
+              backdropFilter: 'blur(4px)',
+              WebkitBackdropFilter: 'blur(4px)',
+              border: '1px solid rgba(255, 255, 255, 0.25)',
               fontSize: 11,
               fontWeight: 700,
               letterSpacing: '0.06em',
@@ -258,7 +260,8 @@ export function Register({ setToken }: RegisterProps) {
               color: '#93c5fd',
               letterSpacing: '0.12em',
               textTransform: 'uppercase',
-              marginBottom: 4
+              marginBottom: 4,
+              textShadow: '0 2px 6px rgba(0, 0, 0, 0.8)'
             }}>
               INDIAN RAILWAYS
             </div>
@@ -270,7 +273,7 @@ export function Register({ setToken }: RegisterProps) {
               lineHeight: 1.15,
               margin: '0 0 14px',
               color: '#ffffff',
-              textShadow: '0 2px 10px rgba(0,0,0,0.3)'
+              textShadow: '0 2px 10px rgba(0, 0, 0, 0.8), 0 1px 2px rgba(0, 0, 0, 0.9)'
             }}>
               RailSamanvayAI
             </h1>
@@ -278,61 +281,81 @@ export function Register({ setToken }: RegisterProps) {
             <p style={{
               fontSize: 16,
               lineHeight: 1.55,
-              color: '#e2e8f0',
+              color: '#f1f5f9',
               margin: '0 0 28px',
               maxWidth: 480,
-              textShadow: '0 1px 4px rgba(0,0,0,0.25)'
+              textShadow: '0 2px 8px rgba(0, 0, 0, 0.85)'
             }}>
               AI-Powered Automatic Block Planning for Railway Maintenance
             </p>
 
-            {/* 3 Core Highlights */}
-            <div style={{ display: 'grid', gap: 16, maxWidth: 500, marginBottom: 32 }}>
-              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+            {/* 3 Core Highlights with Translucent Glass Backing */}
+            <div style={{ display: 'grid', gap: 14, maxWidth: 500, marginBottom: 30 }}>
+              <div style={{
+                display: 'flex',
+                alignItems: 'flex-start',
+                gap: 12,
+                background: 'rgba(5, 20, 45, 0.42)',
+                backdropFilter: 'blur(5px)',
+                WebkitBackdropFilter: 'blur(5px)',
+                padding: '10px 14px',
+                borderRadius: 10,
+                border: '1px solid rgba(255, 255, 255, 0.14)'
+              }}>
                 <div style={{
                   width: 32,
                   height: 32,
                   borderRadius: 8,
-                  background: 'rgba(37, 99, 235, 0.35)',
-                  border: '1px solid rgba(147, 197, 253, 0.5)',
+                  background: 'rgba(37, 99, 235, 0.45)',
+                  border: '1px solid rgba(147, 197, 253, 0.6)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   flexShrink: 0,
-                  marginTop: 2
+                  marginTop: 1
                 }}>
-                  <CheckCircle2 size={16} color="#93c5fd" />
+                  <CheckCircle2 size={16} color="#bfdbfe" />
                 </div>
                 <div>
-                  <div style={{ fontSize: 14, fontWeight: 700, color: '#f8fafc' }}>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: '#ffffff', textShadow: '0 1px 3px rgba(0,0,0,0.8)' }}>
                     Section Planner Workspace
                   </div>
-                  <div style={{ fontSize: 12, color: '#cbd5e1', lineHeight: 1.45, marginTop: 2 }}>
+                  <div style={{ fontSize: 12, color: '#e2e8f0', lineHeight: 1.45, marginTop: 2 }}>
                     Submit and schedule track, bridge, S&amp;T, and overhead electrical maintenance tasks directly into the central optimization pipeline.
                   </div>
                 </div>
               </div>
 
-              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+              <div style={{
+                display: 'flex',
+                alignItems: 'flex-start',
+                gap: 12,
+                background: 'rgba(5, 20, 45, 0.42)',
+                backdropFilter: 'blur(5px)',
+                WebkitBackdropFilter: 'blur(5px)',
+                padding: '10px 14px',
+                borderRadius: 10,
+                border: '1px solid rgba(255, 255, 255, 0.14)'
+              }}>
                 <div style={{
                   width: 32,
                   height: 32,
                   borderRadius: 8,
-                  background: 'rgba(37, 99, 235, 0.35)',
-                  border: '1px solid rgba(147, 197, 253, 0.5)',
+                  background: 'rgba(37, 99, 235, 0.45)',
+                  border: '1px solid rgba(147, 197, 253, 0.6)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   flexShrink: 0,
-                  marginTop: 2
+                  marginTop: 1
                 }}>
-                  <Shield size={16} color="#93c5fd" />
+                  <Shield size={16} color="#bfdbfe" />
                 </div>
                 <div>
-                  <div style={{ fontSize: 14, fontWeight: 700, color: '#f8fafc' }}>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: '#ffffff', textShadow: '0 1px 3px rgba(0,0,0,0.8)' }}>
                     Automated Deconfliction
                   </div>
-                  <div style={{ fontSize: 12, color: '#cbd5e1', lineHeight: 1.45, marginTop: 2 }}>
+                  <div style={{ fontSize: 12, color: '#e2e8f0', lineHeight: 1.45, marginTop: 2 }}>
                     OR-Tools CP-SAT engine verifies machine availability, gang assignments, and line capacity to prevent train operational delays.
                   </div>
                 </div>
@@ -344,15 +367,16 @@ export function Register({ setToken }: RegisterProps) {
               display: 'flex',
               alignItems: 'center',
               gap: 16,
-              paddingTop: 18,
-              borderTop: '1px solid rgba(255, 255, 255, 0.16)',
+              paddingTop: 16,
+              borderTop: '1px solid rgba(255, 255, 255, 0.20)',
               fontSize: 12,
-              color: '#cbd5e1'
+              color: '#e2e8f0',
+              textShadow: '0 1px 4px rgba(0,0,0,0.8)'
             }}>
               <div>
                 Developed by <strong style={{ color: '#ffffff' }}>The Steel Bytes 800</strong>
               </div>
-              <span style={{ color: 'rgba(255,255,255,0.3)' }}>•</span>
+              <span style={{ color: 'rgba(255,255,255,0.4)' }}>•</span>
               <div>
                 Smart India Hackathon 2026 • <strong style={{ color: '#38bdf8' }}>SIH26027</strong>
               </div>
@@ -780,8 +804,8 @@ export function Register({ setToken }: RegisterProps) {
         zIndex: 10,
         padding: '16px 24px',
         textAlign: 'center',
-        borderTop: '1px solid rgba(255, 255, 255, 0.12)',
-        background: 'rgba(7, 20, 40, 0.60)',
+        borderTop: '1px solid rgba(255, 255, 255, 0.15)',
+        background: 'rgba(5, 20, 45, 0.55)',
         fontSize: 12,
         color: '#cbd5e1'
       }}>

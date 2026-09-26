@@ -4,7 +4,7 @@ import axios from 'axios';
 import {
   Train, RefreshCw, Clock, LogOut, Activity, MapPin, Layers,
   ListTodo, Calendar, Compass, AlertTriangle, FileCheck, Database,
-  Settings, Cpu, Play, AlertOctagon, Users
+  Settings, Cpu, Play, AlertOctagon
 } from 'lucide-react';
 
 import {
@@ -350,7 +350,7 @@ function ControlRoom({ token, onLogout }: { token: string; onLogout: () => void 
           </button>
 
           {/* User Profile */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, paddingLeft: 14, borderLeft: `1px solid ${theme.border}` }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, paddingLeft: 14, borderLeft: `1px solid ${theme.border}` }}>
             <div style={{ textAlign: 'right' }}>
               <div style={{ fontSize: 12, fontWeight: 700, color: '#0f172a' }}>
                 {approverName}
@@ -360,40 +360,27 @@ function ControlRoom({ token, onLogout }: { token: string; onLogout: () => void 
               </div>
             </div>
             <button
-              onClick={() => navigate('/landing')}
-              title="Return to Public Landing Page & Departmental Directory"
-              style={{
-                background: '#f1f5f9',
-                border: `1px solid ${theme.border}`,
-                color: theme.textMuted,
-                padding: '7px 10px',
-                borderRadius: 8,
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: 5,
-                fontSize: 11,
-                fontWeight: 700
-              }}
-            >
-              <Users size={13} />
-              Portal Roles
-            </button>
-            <button
               onClick={onLogout}
               title="Sign Out"
               style={{
                 background: 'rgba(220, 38, 38, 0.08)',
                 border: '1px solid rgba(220, 38, 38, 0.2)',
                 color: '#dc2626',
-                padding: '7px 10px',
+                padding: '7px 12px',
                 borderRadius: 8,
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
-                gap: 5,
+                gap: 6,
                 fontSize: 11,
-                fontWeight: 700
+                fontWeight: 700,
+                transition: 'all 0.15s ease'
+              }}
+              onMouseEnter={e => {
+                e.currentTarget.style.background = 'rgba(220, 38, 38, 0.15)';
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.background = 'rgba(220, 38, 38, 0.08)';
               }}
             >
               <LogOut size={13} />
