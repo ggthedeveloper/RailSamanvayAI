@@ -4,11 +4,17 @@ import axios from 'axios';
 import {
   Train, Shield, CheckCircle2, AlertTriangle, RefreshCw,
   Mail, KeyRound, ArrowLeft, Eye, EyeOff, Sparkles, UserCheck,
-  HelpCircle, X
+  HelpCircle, X, ChevronDown, Building2
 } from 'lucide-react';
 import { API_URL, apiError } from '../theme';
 
 type RoleType = 'controller' | 'planner';
+
+export const RAILWAY_DEPARTMENTS = [
+  { value: 'engineering', label: 'Engineering / Permanent Way (P-Way)' },
+  { value: 'trd', label: 'Traction Distribution (TRD)' },
+  { value: 'snt', label: 'Signal & Telecom (S&T)' },
+];
 
 interface LoginProps {
   setToken: (token: string) => void;
@@ -19,6 +25,9 @@ export function Login({ setToken }: LoginProps) {
 
   // Role Selection State
   const [selectedRole, setSelectedRole] = useState<RoleType>('controller');
+
+  // Department State (for Section Planner)
+  const [department, setDepartment] = useState('');
 
   // Form Field States
   const [email, setEmail] = useState('debosmita12@gmail.com');
@@ -37,20 +46,31 @@ export function Login({ setToken }: LoginProps) {
     controller: {
       email: 'debosmita12@gmail.com',
       password: 'admin123',
-      label: 'Chief Controller / Admin'
+      label: 'Chief Controller / Admin',
+      dept: ''
     },
     planner: {
       email: 'shashwat75@gmail.com',
       password: '123456',
-      label: 'Section Planner'
+      label: 'Section Planner',
+      dept: 'engineering'
     }
   };
 
-  // Switch role and update default demo credentials
+  // Switch role and update field visibility
   const handleRoleSelect = (role: RoleType) => {
     setSelectedRole(role);
     setError('');
     setDemoNotice('');
+    if (role === 'controller') {
+      setEmail('debosmita12@gmail.com');
+      setPassword('admin123');
+      setDepartment('');
+    } else {
+      setEmail('shashwat75@gmail.com');
+      setPassword('123456');
+      if (!department) setDepartment('engineering');
+    }
   };
 
   // Populate credentials subtly
@@ -58,17 +78,27 @@ export function Login({ setToken }: LoginProps) {
     const creds = demoAccounts[selectedRole];
     setEmail(creds.email);
     setPassword(creds.password);
+    if (selectedRole === 'planner') {
+      setDepartment(creds.dept || 'engineering');
+    }
     setError('');
-    setDemoNotice(`Loaded credentials for ${creds.label}`);
+    setDemoNotice(`Loaded demo credentials for ${creds.label}`);
     setTimeout(() => setDemoNotice(''), 3500);
   };
 
   // Submission handler
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    setLoading(true);
     setError('');
     setDemoNotice('');
+
+    // Validation for Section Planner Department
+    if (selectedRole === 'planner' && !department) {
+      setError('Please select your railway department.');
+      return;
+    }
+
+    setLoading(true);
 
     try {
       const cleanEmail = email.trim().toLowerCase();
@@ -94,6 +124,13 @@ export function Login({ setToken }: LoginProps) {
         localStorage.setItem('token', data.access_token); // maintain existing compatibility
       }
 
+      // Store selected department for UI session if planner
+      if (selectedRole === 'planner' && department) {
+        localStorage.setItem('user_department', department);
+      } else {
+        localStorage.removeItem('user_department');
+      }
+
       setToken(data.access_token);
       navigate('/overview');
     } catch (err) {
@@ -109,13 +146,13 @@ export function Login({ setToken }: LoginProps) {
       display: 'flex',
       flexDirection: 'column',
       position: 'relative',
-      background: '#070f1e',
+      background: '#0a1728',
       fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
       color: '#0f172a',
       overflowX: 'hidden'
     }}>
       {/* ------------------------------------------------------------------ */}
-      {/* BACKGROUND PHOTOGRAPH & TRANSLUCENT OVERLAYS */}
+      {/* CLEAR HD INDIAN RAILWAYS PHOTOGRAPH (WAP-7 LOCOMOTIVE & INFRASTRUCTURE) */}
       {/* ------------------------------------------------------------------ */}
       <picture style={{
         position: 'absolute',
@@ -126,7 +163,7 @@ export function Login({ setToken }: LoginProps) {
         <source srcSet="/indian_railway_hd.webp" type="image/webp" />
         <img
           src="/indian_railway_hd.jpg"
-          alt="Indian Railways WAP-7 Locomotive"
+          alt="Indian Railways Locomotive & Platform Infrastructure"
           style={{
             width: '100%',
             height: '100%',
@@ -137,11 +174,11 @@ export function Login({ setToken }: LoginProps) {
         />
       </picture>
 
-      {/* Deep Navy Translucent Gradient Overlay */}
+      {/* Subtle Translucent Navy Overlay (0.48 - 0.58) preserving photograph visibility */}
       <div style={{
         position: 'absolute',
         inset: 0,
-        background: 'linear-gradient(135deg, rgba(7, 15, 30, 0.94) 0%, rgba(7, 15, 30, 0.88) 45%, rgba(10, 25, 47, 0.76) 80%, rgba(15, 23, 42, 0.65) 100%)',
+        background: 'linear-gradient(90deg, rgba(7, 20, 40, 0.62) 0%, rgba(7, 20, 40, 0.50) 45%, rgba(7, 20, 40, 0.44) 100%)',
         zIndex: 1,
         pointerEvents: 'none'
       }} />
@@ -156,10 +193,10 @@ export function Login({ setToken }: LoginProps) {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
-        background: 'rgba(7, 15, 30, 0.45)',
-        backdropFilter: 'blur(8px)',
-        WebkitBackdropFilter: 'blur(8px)'
+        borderBottom: '1px solid rgba(255, 255, 255, 0.12)',
+        background: 'rgba(7, 20, 40, 0.40)',
+        backdropFilter: 'blur(6px)',
+        WebkitBackdropFilter: 'blur(6px)'
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <div style={{
@@ -167,7 +204,7 @@ export function Login({ setToken }: LoginProps) {
             height: 40,
             borderRadius: '50%',
             background: '#ffffff',
-            boxShadow: '0 2px 10px rgba(37, 99, 235, 0.3)',
+            boxShadow: '0 2px 10px rgba(37, 99, 235, 0.35)',
             border: '1.5px solid #dbeafe',
             display: 'flex',
             alignItems: 'center',
@@ -193,21 +230,21 @@ export function Login({ setToken }: LoginProps) {
             gap: 6,
             padding: '7px 14px',
             borderRadius: 7,
-            background: 'rgba(255, 255, 255, 0.08)',
-            border: '1px solid rgba(255, 255, 255, 0.16)',
-            color: '#e2e8f0',
+            background: 'rgba(255, 255, 255, 0.12)',
+            border: '1px solid rgba(255, 255, 255, 0.22)',
+            color: '#f1f5f9',
             fontSize: 12,
             fontWeight: 600,
             textDecoration: 'none',
             transition: 'all 0.15s ease'
           }}
           onMouseEnter={e => {
-            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.16)';
+            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.22)';
             e.currentTarget.style.color = '#ffffff';
           }}
           onMouseLeave={e => {
-            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
-            e.currentTarget.style.color = '#e2e8f0';
+            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.12)';
+            e.currentTarget.style.color = '#f1f5f9';
           }}
         >
           <ArrowLeft size={14} />
@@ -225,7 +262,7 @@ export function Login({ setToken }: LoginProps) {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        padding: '36px 24px 20px',
+        padding: '32px 24px 20px',
         boxSizing: 'border-box'
       }}>
         <div style={{
@@ -245,12 +282,12 @@ export function Login({ setToken }: LoginProps) {
               gap: 8,
               padding: '5px 12px',
               borderRadius: 20,
-              background: 'rgba(255, 255, 255, 0.1)',
-              border: '1px solid rgba(255, 255, 255, 0.18)',
+              background: 'rgba(255, 255, 255, 0.14)',
+              border: '1px solid rgba(255, 255, 255, 0.24)',
               fontSize: 11,
               fontWeight: 700,
               letterSpacing: '0.06em',
-              color: '#93c5fd',
+              color: '#bfdbfe',
               marginBottom: 16
             }}>
               <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#38bdf8' }} />
@@ -260,7 +297,7 @@ export function Login({ setToken }: LoginProps) {
             <div style={{
               fontSize: 14,
               fontWeight: 700,
-              color: '#60a5fa',
+              color: '#93c5fd',
               letterSpacing: '0.12em',
               textTransform: 'uppercase',
               marginBottom: 4
@@ -274,7 +311,8 @@ export function Login({ setToken }: LoginProps) {
               letterSpacing: '-0.025em',
               lineHeight: 1.15,
               margin: '0 0 14px',
-              color: '#ffffff'
+              color: '#ffffff',
+              textShadow: '0 2px 10px rgba(0,0,0,0.3)'
             }}>
               RailSamanvayAI
             </h1>
@@ -282,9 +320,10 @@ export function Login({ setToken }: LoginProps) {
             <p style={{
               fontSize: 16,
               lineHeight: 1.55,
-              color: '#cbd5e1',
+              color: '#e2e8f0',
               margin: '0 0 28px',
-              maxWidth: 480
+              maxWidth: 480,
+              textShadow: '0 1px 4px rgba(0,0,0,0.25)'
             }}>
               AI-Powered Automatic Block Planning for Railway Maintenance
             </p>
@@ -296,21 +335,21 @@ export function Login({ setToken }: LoginProps) {
                   width: 32,
                   height: 32,
                   borderRadius: 8,
-                  background: 'rgba(37, 99, 235, 0.25)',
-                  border: '1px solid rgba(96, 165, 250, 0.4)',
+                  background: 'rgba(37, 99, 235, 0.35)',
+                  border: '1px solid rgba(147, 197, 253, 0.5)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   flexShrink: 0,
                   marginTop: 2
                 }}>
-                  <CheckCircle2 size={16} color="#60a5fa" />
+                  <CheckCircle2 size={16} color="#93c5fd" />
                 </div>
                 <div>
-                  <div style={{ fontSize: 14, fontWeight: 700, color: '#f1f5f9' }}>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: '#f8fafc' }}>
                     Precision Block Allocation
                   </div>
-                  <div style={{ fontSize: 12, color: '#94a3b8', lineHeight: 1.45, marginTop: 2 }}>
+                  <div style={{ fontSize: 12, color: '#cbd5e1', lineHeight: 1.45, marginTop: 2 }}>
                     Automated conflict-free maintenance windows harmonized across Operating, Engineering, S&amp;T, and TRD divisions.
                   </div>
                 </div>
@@ -321,21 +360,21 @@ export function Login({ setToken }: LoginProps) {
                   width: 32,
                   height: 32,
                   borderRadius: 8,
-                  background: 'rgba(37, 99, 235, 0.25)',
-                  border: '1px solid rgba(96, 165, 250, 0.4)',
+                  background: 'rgba(37, 99, 235, 0.35)',
+                  border: '1px solid rgba(147, 197, 253, 0.5)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   flexShrink: 0,
                   marginTop: 2
                 }}>
-                  <Shield size={16} color="#60a5fa" />
+                  <Shield size={16} color="#93c5fd" />
                 </div>
                 <div>
-                  <div style={{ fontSize: 14, fontWeight: 700, color: '#f1f5f9' }}>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: '#f8fafc' }}>
                     Corridor Safety &amp; Punctuality
                   </div>
-                  <div style={{ fontSize: 12, color: '#94a3b8', lineHeight: 1.45, marginTop: 2 }}>
+                  <div style={{ fontSize: 12, color: '#cbd5e1', lineHeight: 1.45, marginTop: 2 }}>
                     Constraint-optimized machine scheduling preserving trunk passenger &amp; freight timetables with live conflict telemetry.
                   </div>
                 </div>
@@ -346,21 +385,21 @@ export function Login({ setToken }: LoginProps) {
                   width: 32,
                   height: 32,
                   borderRadius: 8,
-                  background: 'rgba(37, 99, 235, 0.25)',
-                  border: '1px solid rgba(96, 165, 250, 0.4)',
+                  background: 'rgba(37, 99, 235, 0.35)',
+                  border: '1px solid rgba(147, 197, 253, 0.5)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   flexShrink: 0,
                   marginTop: 2
                 }}>
-                  <UserCheck size={16} color="#60a5fa" />
+                  <UserCheck size={16} color="#93c5fd" />
                 </div>
                 <div>
-                  <div style={{ fontSize: 14, fontWeight: 700, color: '#f1f5f9' }}>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: '#f8fafc' }}>
                     Unified Digital Authorization
                   </div>
-                  <div style={{ fontSize: 12, color: '#94a3b8', lineHeight: 1.45, marginTop: 2 }}>
+                  <div style={{ fontSize: 12, color: '#cbd5e1', lineHeight: 1.45, marginTop: 2 }}>
                     Role-specific possession sign-offs for Chief Controllers and Section Planners under Indian Railways General Rules.
                   </div>
                 </div>
@@ -373,14 +412,14 @@ export function Login({ setToken }: LoginProps) {
               alignItems: 'center',
               gap: 16,
               paddingTop: 18,
-              borderTop: '1px solid rgba(255, 255, 255, 0.12)',
+              borderTop: '1px solid rgba(255, 255, 255, 0.16)',
               fontSize: 12,
-              color: '#94a3b8'
+              color: '#cbd5e1'
             }}>
               <div>
                 Developed by <strong style={{ color: '#ffffff' }}>The Steel Bytes 800</strong>
               </div>
-              <span style={{ color: 'rgba(255,255,255,0.2)' }}>•</span>
+              <span style={{ color: 'rgba(255,255,255,0.3)' }}>•</span>
               <div>
                 Smart India Hackathon 2026 • <strong style={{ color: '#38bdf8' }}>SIH26027</strong>
               </div>
@@ -395,7 +434,7 @@ export function Login({ setToken }: LoginProps) {
             border: '1px solid rgba(255, 255, 255, 0.9)',
             borderRadius: 16,
             padding: '34px 30px',
-            boxShadow: '0 25px 60px -15px rgba(0, 0, 0, 0.45)',
+            boxShadow: '0 20px 50px -10px rgba(0, 0, 0, 0.38)',
             width: '100%',
             maxWidth: 480,
             justifySelf: 'center',
@@ -535,6 +574,71 @@ export function Login({ setToken }: LoginProps) {
                 </div>
               </div>
             </div>
+
+            {/* SECTION PLANNER: RAILWAY DEPARTMENT DROPDOWN */}
+            {selectedRole === 'planner' && (
+              <div style={{ marginBottom: 14 }}>
+                <label style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  fontSize: 11,
+                  fontWeight: 700,
+                  color: '#475569',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.04em',
+                  marginBottom: 6
+                }}>
+                  <Building2 size={13} color="#2563eb" />
+                  Railway Department
+                </label>
+                <div style={{ position: 'relative' }}>
+                  <select
+                    value={department}
+                    onChange={e => {
+                      setDepartment(e.target.value);
+                      if (error === 'Please select your railway department.') setError('');
+                    }}
+                    style={{
+                      width: '100%',
+                      boxSizing: 'border-box',
+                      padding: '10px 36px 10px 12px',
+                      background: '#ffffff',
+                      border: error && !department ? '1.5px solid #dc2626' : '1px solid #cbd5e1',
+                      borderRadius: 8,
+                      color: department ? '#0f172a' : '#64748b',
+                      fontSize: 13,
+                      fontWeight: department ? 600 : 400,
+                      outline: 'none',
+                      appearance: 'none',
+                      WebkitAppearance: 'none',
+                      cursor: 'pointer',
+                      transition: 'border-color 0.15s ease, box-shadow 0.15s ease'
+                    }}
+                    onFocus={e => (e.target.style.borderColor = '#2563eb')}
+                    onBlur={e => (e.target.style.borderColor = error && !department ? '#dc2626' : '#cbd5e1')}
+                  >
+                    <option value="" disabled style={{ color: '#94a3b8' }}>Select your department</option>
+                    {RAILWAY_DEPARTMENTS.map(d => (
+                      <option key={d.value} value={d.value} style={{ color: '#0f172a', fontWeight: 500 }}>
+                        {d.label}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown
+                    size={16}
+                    color="#64748b"
+                    style={{
+                      position: 'absolute',
+                      right: 12,
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      pointerEvents: 'none'
+                    }}
+                  />
+                </div>
+              </div>
+            )}
 
             {/* Subtle Demo Credentials Button */}
             <div style={{
@@ -919,10 +1023,10 @@ export function Login({ setToken }: LoginProps) {
         zIndex: 10,
         padding: '16px 24px',
         textAlign: 'center',
-        borderTop: '1px solid rgba(255, 255, 255, 0.08)',
-        background: 'rgba(7, 15, 30, 0.65)',
+        borderTop: '1px solid rgba(255, 255, 255, 0.12)',
+        background: 'rgba(7, 20, 40, 0.60)',
         fontSize: 12,
-        color: '#94a3b8'
+        color: '#cbd5e1'
       }}>
         RailSamanvayAI • The Steel Bytes 800 • SIH26027
       </footer>
