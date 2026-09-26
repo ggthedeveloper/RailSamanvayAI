@@ -4,7 +4,7 @@ import axios from 'axios';
 import {
   Train, RefreshCw, Clock, LogOut, Activity, MapPin, Layers,
   ListTodo, Calendar, Compass, AlertTriangle, FileCheck, Database,
-  Settings, Cpu, Play, AlertOctagon
+  Settings, Cpu, Play, AlertOctagon, Users
 } from 'lucide-react';
 
 import {
@@ -16,6 +16,7 @@ import { API_URL, theme, cardStyle, badgeStyle, buttonPrimary, authHeaders, apiE
 
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { Login } from './components/Login';
+import { LandingPage } from './components/LandingPage';
 import { MapView } from './components/MapView';
 import { RouteAnalyzer } from './components/RouteAnalyzer';
 import { OverviewView } from './components/OverviewView';
@@ -357,6 +358,26 @@ function ControlRoom({ token, onLogout }: { token: string; onLogout: () => void 
                 Operations Controller
               </div>
             </div>
+            <button
+              onClick={() => navigate('/landing')}
+              title="Return to Public Landing Page & Departmental Directory"
+              style={{
+                background: '#f1f5f9',
+                border: `1px solid ${theme.border}`,
+                color: theme.textMuted,
+                padding: '7px 10px',
+                borderRadius: 8,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 5,
+                fontSize: 11,
+                fontWeight: 700
+              }}
+            >
+              <Users size={13} />
+              Portal Roles
+            </button>
             <button
               onClick={onLogout}
               title="Sign Out"
@@ -726,8 +747,12 @@ export default function App() {
     <BrowserRouter>
       <Routes>
         <Route
+          path="/landing"
+          element={<LandingPage setToken={setToken} />}
+        />
+        <Route
           path="/login"
-          element={token ? <Navigate to="/overview" replace /> : <Login setToken={setToken} />}
+          element={token ? <Navigate to="/overview" replace /> : <LandingPage setToken={setToken} />}
         />
         <Route
           path="/*"
@@ -741,7 +766,7 @@ export default function App() {
                 }}
               />
             ) : (
-              <Navigate to="/login" replace />
+              <LandingPage setToken={setToken} />
             )
           }
         />
