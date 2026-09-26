@@ -2,8 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Train,
-  ArrowRight,
-  ArrowDown,
   Activity,
   Sliders,
   CalendarCheck,
@@ -12,7 +10,6 @@ import {
   Zap,
   ShieldCheck,
   UserCheck,
-  CheckCircle2,
   Menu,
   X
 } from 'lucide-react';
@@ -29,7 +26,7 @@ export function LandingPage({ setToken }: LandingPageProps = {}) {
   // Check existing authenticated session
   const hasToken = Boolean(localStorage.getItem('token'));
 
-  const handleEnterPlatform = () => {
+  const handleLoginClick = () => {
     if (hasToken) {
       navigate('/overview');
     } else {
@@ -77,8 +74,8 @@ export function LandingPage({ setToken }: LandingPageProps = {}) {
         zIndex: 1000,
         transition: 'all 0.25s ease',
         background: isScrolled
-          ? 'rgba(11, 20, 38, 0.92)'
-          : 'rgba(11, 20, 38, 0.45)',
+          ? 'rgba(11, 20, 38, 0.94)'
+          : 'rgba(11, 20, 38, 0.5)',
         backdropFilter: 'blur(10px)',
         WebkitBackdropFilter: 'blur(10px)',
         borderBottom: isScrolled ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid transparent'
@@ -94,7 +91,7 @@ export function LandingPage({ setToken }: LandingPageProps = {}) {
             userSelect: 'none'
           }}
         >
-          {/* Blue rounded icon matching reference image */}
+          {/* Blue rounded icon */}
           <div style={{
             width: 36,
             height: 36,
@@ -118,7 +115,7 @@ export function LandingPage({ setToken }: LandingPageProps = {}) {
           </span>
         </div>
 
-        {/* Right: Desktop Navigation */}
+        {/* Right: Desktop Navigation — ONLY ONE action button: Login → */}
         <nav style={{
           display: 'none',
           alignItems: 'center',
@@ -149,9 +146,9 @@ export function LandingPage({ setToken }: LandingPageProps = {}) {
             Team
           </button>
 
-          {/* Blue pill button matching reference image */}
+          {/* Only Login button in top-right */}
           <button
-            onClick={handleEnterPlatform}
+            onClick={handleLoginClick}
             style={{
               display: 'inline-flex',
               alignItems: 'center',
@@ -174,7 +171,7 @@ export function LandingPage({ setToken }: LandingPageProps = {}) {
               e.currentTarget.style.background = '#2563eb';
             }}
           >
-            {hasToken ? 'Dashboard' : 'Login'} →
+            Login →
           </button>
         </nav>
 
@@ -217,7 +214,7 @@ export function LandingPage({ setToken }: LandingPageProps = {}) {
           <button onClick={() => scrollTo('how-it-works')} style={mobileNavLinkStyle}>How It Works</button>
           <button onClick={() => scrollTo('team')} style={mobileNavLinkStyle}>Team</button>
           <button
-            onClick={handleEnterPlatform}
+            onClick={handleLoginClick}
             style={{
               padding: '12px',
               borderRadius: 8,
@@ -230,7 +227,7 @@ export function LandingPage({ setToken }: LandingPageProps = {}) {
               textAlign: 'center'
             }}
           >
-            {hasToken ? 'Open Dashboard →' : 'Login →'}
+            Login →
           </button>
         </div>
       )}
@@ -240,30 +237,41 @@ export function LandingPage({ setToken }: LandingPageProps = {}) {
       {/* ------------------------------------------------------------------ */}
       <section style={{
         position: 'relative',
-        minHeight: '88vh',
+        minHeight: '90vh',
         display: 'flex',
         alignItems: 'center',
         padding: '110px 48px 60px',
         boxSizing: 'border-box',
         overflow: 'hidden',
-        background: '#0a1222'
+        background: '#080f1e'
       }}>
-        {/* Full-width Indian Railway photographic background */}
-        <div style={{
+        {/* Full-width High-Resolution (1920x1080) Indian Railways photographic background */}
+        <picture style={{
           position: 'absolute',
           inset: 0,
-          backgroundImage: "url('/indian_railway_hero.jpg')",
-          backgroundSize: 'cover',
-          backgroundPosition: 'right center',
-          backgroundRepeat: 'no-repeat',
           zIndex: 0
-        }} />
+        }}>
+          <source srcSet="/indian_railway_hd.webp" type="image/webp" />
+          <img
+            src="/indian_railway_hd.jpg"
+            alt="Indian Railways WAP-7 Locomotive on Track"
+            style={{
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+              objectPosition: 'right center',
+              display: 'block'
+            }}
+          />
+        </picture>
 
-        {/* Translucent linear gradient overlay ensuring crisp left-side readability */}
+        {/* Professional translucent gradient overlay:
+            Slightly stronger navy gradient on the left behind the text,
+            while leaving the locomotive, tracks, and platform razor-sharp and clearly visible on the right */}
         <div style={{
           position: 'absolute',
           inset: 0,
-          background: 'linear-gradient(90deg, rgba(10, 18, 34, 0.95) 0%, rgba(10, 18, 34, 0.88) 35%, rgba(10, 18, 34, 0.4) 65%, transparent 100%)',
+          background: 'linear-gradient(90deg, rgba(8, 15, 30, 0.92) 0%, rgba(8, 15, 30, 0.82) 38%, rgba(8, 15, 30, 0.35) 68%, rgba(8, 15, 30, 0.15) 100%)',
           zIndex: 1
         }} />
 
@@ -290,7 +298,7 @@ export function LandingPage({ setToken }: LandingPageProps = {}) {
             }}>
               INDIAN RAILWAYS
             </span>
-            {/* Subtle Indian Tricolour line matching reference image */}
+            {/* Subtle Indian Tricolour line */}
             <div style={{
               width: 65,
               height: 3,
@@ -347,7 +355,7 @@ export function LandingPage({ setToken }: LandingPageProps = {}) {
             marginBottom: 28
           }}>
             <button
-              onClick={handleEnterPlatform}
+              onClick={handleLoginClick}
               style={{
                 display: 'inline-flex',
                 alignItems: 'center',
@@ -403,7 +411,7 @@ export function LandingPage({ setToken }: LandingPageProps = {}) {
             </button>
           </div>
 
-          {/* Attribution Box matching reference image */}
+          {/* Attribution Box */}
           <div style={{
             borderLeft: '2px solid rgba(255, 255, 255, 0.35)',
             paddingLeft: 12,
@@ -486,16 +494,15 @@ export function LandingPage({ setToken }: LandingPageProps = {}) {
             </p>
           </div>
 
-          {/* Three Feature Cards matching reference image */}
+          {/* Three Feature Cards */}
           <div style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(auto-fit, minmax(310px, 1fr))',
-            gap: 24,
-            marginBottom: 44
+            gap: 24
           }}>
             {/* Card 1: PREDICT */}
             <div style={featureCardStyle}>
-              {/* Soft pink/red icon box matching reference */}
+              {/* Soft pink/red icon box */}
               <div style={{
                 width: 48,
                 height: 48,
@@ -543,7 +550,7 @@ export function LandingPage({ setToken }: LandingPageProps = {}) {
 
             {/* Card 2: PRIORITISE */}
             <div style={featureCardStyle}>
-              {/* Soft amber icon box matching reference */}
+              {/* Soft amber icon box */}
               <div style={{
                 width: 48,
                 height: 48,
@@ -591,7 +598,7 @@ export function LandingPage({ setToken }: LandingPageProps = {}) {
 
             {/* Card 3: OPTIMISE */}
             <div style={featureCardStyle}>
-              {/* Soft green icon box matching reference */}
+              {/* Soft green icon box */}
               <div style={{
                 width: 48,
                 height: 48,
@@ -636,56 +643,6 @@ export function LandingPage({ setToken }: LandingPageProps = {}) {
                 Generate feasible maintenance block plans under operational constraints.
               </p>
             </div>
-          </div>
-
-          {/* Reference Image Quick-CTA Banner */}
-          <div style={{
-            background: 'rgba(219, 234, 254, 0.65)',
-            border: '1px solid rgba(191, 219, 254, 0.9)',
-            borderRadius: 14,
-            padding: '28px 32px',
-            textAlign: 'center',
-            backdropFilter: 'blur(8px)',
-            maxWidth: 820,
-            margin: '0 auto'
-          }}>
-            <h4 style={{
-              fontSize: 19,
-              fontWeight: 800,
-              color: '#0f172a',
-              margin: '0 0 6px'
-            }}>
-              Ready to plan better?
-            </h4>
-            <p style={{
-              fontSize: 13,
-              color: '#475569',
-              margin: '0 0 16px'
-            }}>
-              Explore RailSamanvayAI's intelligent maintenance block planning platform.
-            </p>
-            <button
-              onClick={handleEnterPlatform}
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 6,
-                padding: '9px 20px',
-                fontSize: 13,
-                fontWeight: 700,
-                color: '#ffffff',
-                background: '#2563eb',
-                border: '1px solid #1d4ed8',
-                borderRadius: 7,
-                cursor: 'pointer',
-                boxShadow: '0 2px 10px rgba(37, 99, 235, 0.3)',
-                transition: 'background 0.15s ease'
-              }}
-              onMouseEnter={e => (e.currentTarget.style.background = '#1d4ed8')}
-              onMouseLeave={e => (e.currentTarget.style.background = '#2563eb')}
-            >
-              Enter RailSamanvayAI →
-            </button>
           </div>
         </div>
       </section>
@@ -1177,10 +1134,10 @@ export function LandingPage({ setToken }: LandingPageProps = {}) {
       </section>
 
       {/* ------------------------------------------------------------------ */}
-      {/* 9. SECTION: TEAM */}
+      {/* 9. SECTION: MEET STEEL BYTES 800 */}
       {/* ------------------------------------------------------------------ */}
       <section id="team" style={{
-        padding: '80px 32px',
+        padding: '80px 32px 90px',
         position: 'relative',
         background: 'linear-gradient(180deg, #f8fafc 0%, #edf3f8 100%)',
         borderBottom: '1px solid #cbd5e1'
@@ -1217,7 +1174,7 @@ export function LandingPage({ setToken }: LandingPageProps = {}) {
             </p>
           </div>
 
-          {/* 6 Developer Cards in 3x2 Grid */}
+          {/* 6 Developer Cards in 3x2 Grid — Steel Bytes 800 REMOVED from individual cards */}
           <div style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
@@ -1237,7 +1194,7 @@ export function LandingPage({ setToken }: LandingPageProps = {}) {
                   background: '#ffffff',
                   border: '1px solid #e2e8f0',
                   borderRadius: 12,
-                  padding: '24px 22px',
+                  padding: '22px 24px',
                   display: 'flex',
                   alignItems: 'center',
                   gap: 16,
@@ -1255,15 +1212,15 @@ export function LandingPage({ setToken }: LandingPageProps = {}) {
               >
                 {/* Initials Avatar */}
                 <div style={{
-                  width: 50,
-                  height: 50,
+                  width: 48,
+                  height: 48,
                   borderRadius: '50%',
                   background: 'linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   color: '#ffffff',
-                  fontSize: 17,
+                  fontSize: 16,
                   fontWeight: 800,
                   letterSpacing: '0.02em',
                   flexShrink: 0,
@@ -1272,21 +1229,14 @@ export function LandingPage({ setToken }: LandingPageProps = {}) {
                   {member.initials}
                 </div>
 
+                {/* Only Name, NO 'Steel Bytes 800' inside the card */}
                 <div>
                   <div style={{
                     fontSize: 16,
                     fontWeight: 800,
-                    color: '#0f172a',
-                    marginBottom: 4
+                    color: '#0f172a'
                   }}>
                     {member.name}
-                  </div>
-                  <div style={{
-                    fontSize: 12,
-                    fontWeight: 700,
-                    color: '#2563eb'
-                  }}>
-                    Steel Bytes 800
                   </div>
                 </div>
               </div>
@@ -1296,84 +1246,7 @@ export function LandingPage({ setToken }: LandingPageProps = {}) {
       </section>
 
       {/* ------------------------------------------------------------------ */}
-      {/* 10. FINAL CTA */}
-      {/* ------------------------------------------------------------------ */}
-      <section style={{
-        padding: '90px 32px',
-        position: 'relative',
-        textAlign: 'center',
-        background: '#090f1f',
-        overflow: 'hidden'
-      }}>
-        {/* Subtle railway background visual */}
-        <div style={{
-          position: 'absolute',
-          inset: 0,
-          backgroundImage: "url('/indian_railway_hero.jpg')",
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          opacity: 0.2,
-          zIndex: 0
-        }} />
-
-        <div style={{
-          position: 'relative',
-          zIndex: 1,
-          maxWidth: 640,
-          margin: '0 auto'
-        }}>
-          <h2 style={{
-            fontSize: 'clamp(28px, 4vw, 38px)',
-            fontWeight: 800,
-            letterSpacing: '-0.025em',
-            color: '#ffffff',
-            margin: '0 0 14px'
-          }}>
-            Ready to plan better?
-          </h2>
-
-          <p style={{
-            fontSize: 16,
-            lineHeight: 1.6,
-            color: '#cbd5e1',
-            margin: '0 0 32px'
-          }}>
-            Explore RailSamanvayAI's intelligent railway maintenance block planning platform.
-          </p>
-
-          <button
-            onClick={handleEnterPlatform}
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 10,
-              padding: '15px 36px',
-              fontSize: 16,
-              fontWeight: 800,
-              color: '#ffffff',
-              background: '#2563eb',
-              border: '1px solid #3b82f6',
-              borderRadius: 8,
-              cursor: 'pointer',
-              boxShadow: '0 6px 24px rgba(37, 99, 235, 0.45)',
-              transition: 'all 0.15s ease'
-            }}
-            onMouseEnter={e => {
-              e.currentTarget.style.background = '#1d4ed8';
-              e.currentTarget.style.transform = 'translateY(-2px)';
-            }}
-            onMouseLeave={e => {
-              e.currentTarget.style.background = '#2563eb';
-              e.currentTarget.style.transform = 'translateY(0)';
-            }}
-          >
-            Enter RailSamanvayAI →
-          </button>
-        </div>
-      </section>
-
-      {/* ------------------------------------------------------------------ */}
-      {/* 11. FOOTER */}
+      {/* 11. FOOTER (Natural transition from Meet Steel Bytes 800) */}
       {/* ------------------------------------------------------------------ */}
       <footer style={{
         background: '#070b16',
@@ -1437,8 +1310,8 @@ export function LandingPage({ setToken }: LandingPageProps = {}) {
             <button onClick={() => scrollTo('users')} style={footerLinkStyle}>Users</button>
             <button onClick={() => scrollTo('how-it-works')} style={footerLinkStyle}>How It Works</button>
             <button onClick={() => scrollTo('team')} style={footerLinkStyle}>Team</button>
-            <button onClick={handleEnterPlatform} style={{ ...footerLinkStyle, color: '#38bdf8', fontWeight: 700 }}>
-              {hasToken ? 'Dashboard' : 'Login'}
+            <button onClick={handleLoginClick} style={{ ...footerLinkStyle, color: '#38bdf8', fontWeight: 700 }}>
+              Login →
             </button>
           </div>
         </div>
@@ -1522,7 +1395,7 @@ const footerLinkStyle: React.CSSProperties = {
 };
 
 const featureCardStyle: React.CSSProperties = {
-  background: 'rgba(255, 255, 255, 0.9)',
+  background: 'rgba(255, 255, 255, 0.92)',
   border: '1px solid rgba(226, 232, 240, 0.9)',
   borderRadius: 14,
   padding: '32px 28px',
@@ -1531,7 +1404,7 @@ const featureCardStyle: React.CSSProperties = {
 };
 
 const userCardStyle: React.CSSProperties = {
-  background: 'rgba(255, 255, 255, 0.85)',
+  background: 'rgba(255, 255, 255, 0.88)',
   border: '1px solid #cbd5e1',
   borderRadius: 12,
   padding: '24px 22px',
