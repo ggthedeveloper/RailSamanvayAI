@@ -424,7 +424,7 @@ export function LandingPage({ setToken }: LandingPageProps = {}) {
               fontWeight: 600,
               color: '#e2e8f0'
             }}>
-              Developed by <strong style={{ color: '#38bdf8', fontWeight: 800 }}>Steel Bytes 800</strong>
+              Developed by <strong style={{ color: '#38bdf8', fontWeight: 800 }}>The Steel Bytes 800</strong>
             </div>
             <div style={{
               fontSize: 12,
@@ -1152,7 +1152,7 @@ export function LandingPage({ setToken }: LandingPageProps = {}) {
               color: '#0f172a',
               margin: '0 0 10px'
             }}>
-              Meet Steel Bytes 800
+              Meet The Steel Bytes 800
             </h2>
 
             <div style={{
@@ -1292,7 +1292,7 @@ export function LandingPage({ setToken }: LandingPageProps = {}) {
           {/* Center: Team & Hackathon credits */}
           <div style={{ textAlign: 'center', fontSize: 12 }}>
             <div style={{ color: '#cbd5e1', fontWeight: 600 }}>
-              Developed by <strong style={{ color: '#38bdf8' }}>Steel Bytes 800</strong>
+              Developed by <strong style={{ color: '#38bdf8' }}>The Steel Bytes 800</strong>
             </div>
             <div style={{ color: '#64748b', marginTop: 2 }}>
               Smart India Hackathon 2026 • SIH26027
