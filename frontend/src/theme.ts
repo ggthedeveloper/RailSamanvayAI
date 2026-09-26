@@ -3,6 +3,7 @@ import { AxiosError } from 'axios';
 import { Station } from './types';
 
 export const API_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+export const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || 'AIzaSyCubQwLYG5L59LJawYmwhbSnYqCf70fT2s';
 
 export const theme = {
   bg: '#f8fafc',

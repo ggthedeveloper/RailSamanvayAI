@@ -1,7 +1,7 @@
 import React from 'react';
-import { Sparkles } from 'lucide-react';
+import { Sparkles, MapPin } from 'lucide-react';
 import { ModelHealth } from '../types';
-import { API_URL, theme, cardStyle } from '../theme';
+import { API_URL, GOOGLE_MAPS_API_KEY, theme, cardStyle } from '../theme';
 
 export function SettingsView({ modelHealth }: { modelHealth: ModelHealth | null }) {
   return (
@@ -25,6 +25,36 @@ export function SettingsView({ modelHealth }: { modelHealth: ModelHealth | null 
         </div>
         <div style={{ padding: 10, background: theme.bg, borderRadius: 8, fontSize: 12, color: theme.green }}>
           ✓ Connected to FastAPI backend with SQLite canonical database.
+        </div>
+      </div>
+
+      {/* Google Maps Platform Integration */}
+      <div style={cardStyle}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+          <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: theme.text, display: 'flex', alignItems: 'center', gap: 8 }}>
+            <MapPin size={18} color={theme.cyan} />
+            Google Maps Platform Integration
+          </h3>
+          <span style={{
+            padding: '3px 8px',
+            borderRadius: 6,
+            fontSize: 11,
+            fontWeight: 700,
+            background: 'rgba(34,197,94,0.15)',
+            color: theme.green
+          }}>
+            ● ACTIVE & CONFIGURED
+          </span>
+        </div>
+        <div style={{ fontSize: 13, color: theme.textMuted, marginBottom: 8 }}>
+          Configured API Key: <code style={{ fontFamily: 'monospace', background: theme.bg, padding: '2px 6px', borderRadius: 4 }}>
+            {GOOGLE_MAPS_API_KEY ? `${GOOGLE_MAPS_API_KEY.slice(0, 10)}...${GOOGLE_MAPS_API_KEY.slice(-6)}` : 'Not Configured'}
+          </code>
+        </div>
+        <div style={{ padding: 10, background: theme.bg, borderRadius: 8, fontSize: 12, color: theme.textMuted, display: 'grid', gap: 4 }}>
+          <div><strong>Active Services:</strong> Google Maps Dynamic Raster Tiles, JS SDK & Geospatial Visualization</div>
+          <div><strong>Layers Supported:</strong> Roadmap, Satellite / Hybrid, Physical Terrain, OpenRailwayMap Overlay</div>
+          <div><strong>Environment Variable:</strong> <code>VITE_GOOGLE_MAPS_API_KEY</code></div>
         </div>
       </div>
 

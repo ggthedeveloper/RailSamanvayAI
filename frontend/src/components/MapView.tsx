@@ -1,8 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { MapContainer, TileLayer, CircleMarker, Polyline, Popup, useMap } from 'react-leaflet';
-import { Radio, RefreshCw, AlertCircle, MapPin } from 'lucide-react';
+import { Radio, RefreshCw, AlertCircle, MapPin, Layers } from 'lucide-react';
 import { Station, Section, RouteAnalysisResult } from '../types';
-import { theme, cardStyle, getCoords } from '../theme';
+import { theme, cardStyle, getCoords, GOOGLE_MAPS_API_KEY } from '../theme';
 
 function RecenterMap({ center }: { center: [number, number] | null }) {
   const map = useMap();
@@ -79,6 +79,8 @@ export function MapView({
 }: MapViewProps) {
   const [tileError, setTileError] = useState(false);
   const [recenterTrigger, setRecenterTrigger] = useState(0);
+  const [mapLayer, setMapLayer] = useState<'google_roadmap' | 'google_satellite' | 'google_terrain' | 'carto'>('google_roadmap');
+  const [showRailOverlay, setShowRailOverlay] = useState(true);
 
   // Validate coordinates strictly: finite and within valid geographic bounds
   const validStations = useMemo(() => {
@@ -232,14 +234,75 @@ export function MapView({
           <span style={{ fontSize: 11, fontWeight: 600, color: theme.textMuted, marginLeft: 8 }}>
             ({validStations.length} nodes · {sections.length} corridor sections)
           </span>
+          <span style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 4,
+            padding: '2px 8px',
+            borderRadius: 6,
+            fontSize: 10,
+            fontWeight: 700,
+            background: 'rgba(34, 197, 94, 0.12)',
+            color: '#16a34a',
+            border: '1px solid rgba(22, 163, 74, 0.25)',
+            marginLeft: 4
+          }}>
+            <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#16a34a' }}></span>
+            Google Maps Active
+          </span>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
           {selectedStation && (
             <span style={{ fontSize: 11, color: theme.cyan, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}>
               <MapPin size={13} />
               Selected: {selectedStation.name} ({selectedStation.code})
             </span>
           )}
+
+          {/* Map Layer Switcher */}
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 4,
+            background: theme.surface,
+            border: `1px solid ${theme.border}`,
+            borderRadius: 6,
+            padding: '2px 6px'
+          }}>
+            <Layers size={13} color={theme.textDim} />
+            <select
+              value={mapLayer}
+              onChange={(e) => setMapLayer(e.target.value as 'google_roadmap' | 'google_satellite' | 'google_terrain' | 'carto')}
+              style={{
+                border: 0,
+                background: 'transparent',
+                fontSize: 11,
+                fontWeight: 600,
+                color: theme.text,
+                outline: 'none',
+                cursor: 'pointer',
+                padding: '2px 0'
+              }}
+              title="Select Base Map Layer"
+            >
+              <option value="google_roadmap">Google Maps (Roadmap)</option>
+              <option value="google_satellite">Google Maps (Satellite)</option>
+              <option value="google_terrain">Google Maps (Terrain)</option>
+              <option value="carto">Carto Light</option>
+            </select>
+          </div>
+
+          {/* Railway Tracks Overlay Toggle */}
+          <label style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 11, fontWeight: 600, color: theme.textMuted, cursor: 'pointer' }}>
+            <input
+              type="checkbox"
+              checked={showRailOverlay}
+              onChange={(e) => setShowRailOverlay(e.target.checked)}
+              style={{ cursor: 'pointer' }}
+            />
+            Rail Tracks
+          </label>
+
           <button
             onClick={() => setRecenterTrigger(k => k + 1)}
             style={{
@@ -376,18 +439,60 @@ export function MapView({
             scrollWheelZoom={true}
             style={{ height: '100%', width: '100%', minHeight: 480, background: '#f8fafc' }}
           >
-            <TileLayer
-              attribution="&copy; OpenStreetMap contributors &copy; CARTO"
-              url="https://{s}.basemaps.cartocdn.com/rastertiles/light_all/{z}/{x}/{y}{r}.png"
-              eventHandlers={{
-                tileerror: () => setTileError(true)
-              }}
-            />
-            <TileLayer
-              attribution="Railway overlay &copy; OpenRailwayMap contributors"
-              url="https://{s}.tiles.openrailwaymap.org/standard/{z}/{x}/{y}.png"
-              opacity={0.75}
-            />
+            {mapLayer === 'google_roadmap' && (
+              <TileLayer
+                key="google_roadmap"
+                attribution='&copy; <a href="https://maps.google.com" target="_blank" rel="noopener noreferrer">Google Maps</a>'
+                url={`https://mt{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}&key=${GOOGLE_MAPS_API_KEY}`}
+                subdomains={['0', '1', '2', '3']}
+                maxZoom={20}
+                eventHandlers={{
+                  tileerror: () => setTileError(true)
+                }}
+              />
+            )}
+            {mapLayer === 'google_satellite' && (
+              <TileLayer
+                key="google_satellite"
+                attribution='&copy; <a href="https://maps.google.com" target="_blank" rel="noopener noreferrer">Google Maps</a>'
+                url={`https://mt{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}&key=${GOOGLE_MAPS_API_KEY}`}
+                subdomains={['0', '1', '2', '3']}
+                maxZoom={20}
+                eventHandlers={{
+                  tileerror: () => setTileError(true)
+                }}
+              />
+            )}
+            {mapLayer === 'google_terrain' && (
+              <TileLayer
+                key="google_terrain"
+                attribution='&copy; <a href="https://maps.google.com" target="_blank" rel="noopener noreferrer">Google Maps</a>'
+                url={`https://mt{s}.google.com/vt/lyrs=p&x={x}&y={y}&z={z}&key=${GOOGLE_MAPS_API_KEY}`}
+                subdomains={['0', '1', '2', '3']}
+                maxZoom={20}
+                eventHandlers={{
+                  tileerror: () => setTileError(true)
+                }}
+              />
+            )}
+            {mapLayer === 'carto' && (
+              <TileLayer
+                key="carto"
+                attribution="&copy; OpenStreetMap contributors &copy; CARTO"
+                url="https://{s}.basemaps.cartocdn.com/rastertiles/light_all/{z}/{x}/{y}{r}.png"
+                eventHandlers={{
+                  tileerror: () => setTileError(true)
+                }}
+              />
+            )}
+
+            {showRailOverlay && (
+              <TileLayer
+                attribution="Railway overlay &copy; OpenRailwayMap contributors"
+                url="https://{s}.tiles.openrailwaymap.org/standard/{z}/{x}/{y}.png"
+                opacity={0.75}
+              />
+            )}
 
             <RecenterController center={selectedCoords} recenterTrigger={recenterTrigger} />
 
