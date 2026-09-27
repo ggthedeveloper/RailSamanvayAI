@@ -14,12 +14,11 @@ An AI-driven decision-support platform for optimising railway maintenance blocks
 
 </p>
 
-# 🔗 Repository
-
 **GitHub:**
 https://github.com/ggthedeveloper/RailSamanvayAI
 
 **Live Demo:**
+https://rail-samanvay-ai.vercel.app/
 
 ---
 
