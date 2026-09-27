@@ -216,7 +216,7 @@ export function LandingPage({ setToken }: LandingPageProps = {}) {
       {/* ------------------------------------------------------------------ */}
       {/* 2. FULL SCREEN HERO SECTION (MATCHES REFERENCE SCREENSHOT 1)      */}
       {/* ------------------------------------------------------------------ */}
-      <section style={{
+      <section className="landing-hero-section" style={{
         position: 'relative',
         minHeight: '100vh',
         display: 'flex',
@@ -283,7 +283,7 @@ export function LandingPage({ setToken }: LandingPageProps = {}) {
 
           {/* Main Large Heading */}
           <h1 style={{
-            fontSize: 'clamp(44px, 5.5vw, 68px)',
+            fontSize: 'clamp(30px, 8vw, 68px)',
             fontWeight: 900,
             letterSpacing: '-0.03em',
             lineHeight: 1.08,

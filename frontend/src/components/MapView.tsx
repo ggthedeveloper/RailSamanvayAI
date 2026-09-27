@@ -341,7 +341,7 @@ export function MapView({
         </div>
       )}
 
-      <div style={{ flex: 1, position: 'relative', width: '100%', minHeight: 480 }}>
+      <div className="map-container-wrapper" style={{ flex: 1, position: 'relative', width: '100%', minHeight: 480 }}>
         {/* STATE 1: LOADING */}
         {isStateLoading && (
           <div style={{

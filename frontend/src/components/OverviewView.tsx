@@ -118,7 +118,7 @@ export function OverviewView({
         }} />
 
         {/* Left Headline */}
-        <div style={{ position: 'relative', zIndex: 3, maxWidth: '52%' }}>
+        <div className="hero-banner-content" style={{ position: 'relative', zIndex: 3, maxWidth: '52%' }}>
           <div style={{
             fontSize: 11,
             fontWeight: 800,
@@ -131,7 +131,7 @@ export function OverviewView({
           </div>
           <h1 style={{
             margin: '0 0 6px 0',
-            fontSize: 32,
+            fontSize: 'clamp(22px, 5vw, 32px)',
             fontWeight: 800,
             color: '#ffffff',
             letterSpacing: '-0.02em',
@@ -142,7 +142,7 @@ export function OverviewView({
           </h1>
           <p style={{
             margin: 0,
-            fontSize: 13,
+            fontSize: 'clamp(12px, 3vw, 13px)',
             fontWeight: 400,
             color: '#cbd5e1',
             lineHeight: 1.4
@@ -235,7 +235,7 @@ export function OverviewView({
       {/* ================================================================== */}
       {/* 2. ROW OF 4 METRIC KPI CARDS (WHITE GLASS)                         */}
       {/* ================================================================== */}
-      <div style={{
+      <div className="kpi-cards-grid" style={{
         display: 'grid',
         gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
         gap: 16
@@ -418,7 +418,7 @@ export function OverviewView({
             Department-wise Maintenance Tasks
           </h3>
 
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 20 }}>
+          <div className="overview-donut-flex" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 20 }}>
             {/* SVG Donut */}
             <div style={{ position: 'relative', width: 180, height: 180, flexShrink: 0 }}>
               <svg width="180" height="180" viewBox="0 0 180 180" style={{ transform: 'rotate(-90deg)' }}>

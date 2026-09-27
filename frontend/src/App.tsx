@@ -4,7 +4,7 @@ import axios from 'axios';
 import {
   Train, RefreshCw, Clock, LogOut, Activity, MapPin, Layers,
   ListTodo, Calendar, Compass, AlertTriangle, FileCheck, Database,
-  Settings, Cpu, Play, AlertOctagon
+  Settings, Cpu, Play, AlertOctagon, Menu, X
 } from 'lucide-react';
 
 import {
@@ -69,6 +69,13 @@ function ControlRoom({ token, onLogout }: { token: string; onLogout: () => void 
   const [approverRole, setApproverRole] = useState<string>('Chief Controller');
   const [approvalRemarks, setApprovalRemarks] = useState<string>('Approved per Indian Railways Safety Regulations');
   const [approvingTaskId, setApprovingTaskId] = useState<string | null>(null);
+
+  // Mobile Navigation State
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
+
+  useEffect(() => {
+    setMobileNavOpen(false);
+  }, [location.pathname]);
 
   // Live Clock
   const [currentTime, setCurrentTime] = useState<string>('');
@@ -240,7 +247,7 @@ function ControlRoom({ token, onLogout }: { token: string; onLogout: () => void 
       {/* ------------------------------------------------------------------ */}
       {/* TOP RAILWAY OPERATIONS CONTROL HEADER (GLASSMORPHISM)              */}
       {/* ------------------------------------------------------------------ */}
-      <header style={{
+      <header className="app-header" style={{
         height: 68,
         padding: '0 24px',
         background: 'rgba(7, 20, 42, 0.86)',
@@ -255,7 +262,29 @@ function ControlRoom({ token, onLogout }: { token: string; onLogout: () => void 
         zIndex: 1000,
         boxShadow: '0 4px 20px rgba(0, 0, 0, 0.25)'
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          {/* Mobile Menu Toggle Button */}
+          <button
+            className="mobile-sidebar-toggle"
+            onClick={() => setMobileNavOpen(prev => !prev)}
+            aria-label="Toggle navigation"
+            style={{
+              background: 'rgba(255, 255, 255, 0.08)',
+              border: '1px solid rgba(255, 255, 255, 0.20)',
+              color: '#ffffff',
+              width: 38,
+              height: 38,
+              borderRadius: 8,
+              cursor: 'pointer',
+              display: 'none',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0
+            }}
+          >
+            {mobileNavOpen ? <X size={20} /> : <Menu size={20} />}
+          </button>
+
           <div style={{
             display: 'flex',
             alignItems: 'center',
@@ -273,10 +302,10 @@ function ControlRoom({ token, onLogout }: { token: string; onLogout: () => void 
           </div>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span style={{ fontSize: 18, fontWeight: 800, letterSpacing: '-0.02em', color: '#ffffff' }}>
+              <span style={{ fontSize: 18, fontWeight: 800, letterSpacing: '-0.02em', color: '#ffffff', whiteSpace: 'nowrap' }}>
                 RailSamanvayAI
               </span>
-              <span style={{
+              <span className="header-version-badge" style={{
                 padding: '2px 8px',
                 borderRadius: 6,
                 background: 'rgba(2, 132, 199, 0.25)',
@@ -284,19 +313,20 @@ function ControlRoom({ token, onLogout }: { token: string; onLogout: () => void 
                 border: '1px solid rgba(56, 189, 248, 0.40)',
                 fontSize: 11,
                 fontWeight: 700,
-                letterSpacing: '0.04em'
+                letterSpacing: '0.04em',
+                whiteSpace: 'nowrap'
               }}>
                 IR-BLOCK-AI v2.4
               </span>
             </div>
-            <div style={{ fontSize: 11, color: '#94a3b8', fontWeight: 500 }}>
+            <div className="header-subtitle" style={{ fontSize: 11, color: '#94a3b8', fontWeight: 500, whiteSpace: 'nowrap' }}>
               Automatic Railway Block Planning System · Ministry of Railways
             </div>
           </div>
         </div>
 
         {/* Status Indicators */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           {/* Signal Indicator */}
           <div style={{
             display: 'flex',
@@ -308,22 +338,24 @@ function ControlRoom({ token, onLogout }: { token: string; onLogout: () => void 
             background: 'rgba(15, 23, 42, 0.65)',
             border: '1px solid rgba(255, 255, 255, 0.16)',
             borderRadius: 8,
-            backdropFilter: 'blur(8px)'
+            backdropFilter: 'blur(8px)',
+            whiteSpace: 'nowrap'
           }}>
             <span style={{
               width: 8,
               height: 8,
               borderRadius: '50%',
               background: optStatus === 'OPTIMAL' ? '#16a34a' : optStatus ? '#d97706' : '#94a3b8',
-              boxShadow: optStatus ? `0 0 8px ${optStatus === 'OPTIMAL' ? '#16a34a' : '#d97706'}` : 'none'
+              boxShadow: optStatus ? `0 0 8px ${optStatus === 'OPTIMAL' ? '#16a34a' : '#d97706'}` : 'none',
+              flexShrink: 0
             }} />
-            <span style={{ fontWeight: 600 }}>
+            <span className="header-status-text" style={{ fontWeight: 600 }}>
               {optStatus === 'OPTIMAL' ? 'CP-SAT Solver Optimal' : optStatus ? 'Fallback Rules Active' : 'Solver Idle (Not run yet)'}
             </span>
           </div>
 
           {/* Time Clock */}
-          <div style={{
+          <div className="header-clock" style={{
             padding: '6px 12px',
             background: 'rgba(15, 23, 42, 0.65)',
             border: '1px solid rgba(255, 255, 255, 0.16)',
@@ -335,7 +367,8 @@ function ControlRoom({ token, onLogout }: { token: string; onLogout: () => void 
             display: 'flex',
             alignItems: 'center',
             gap: 6,
-            backdropFilter: 'blur(8px)'
+            backdropFilter: 'blur(8px)',
+            whiteSpace: 'nowrap'
           }}>
             <Clock size={14} color="#38bdf8" />
             {currentTime}
@@ -359,22 +392,23 @@ function ControlRoom({ token, onLogout }: { token: string; onLogout: () => void 
               fontWeight: 600,
               boxShadow: '0 2px 6px rgba(0,0,0,0.15)',
               backdropFilter: 'blur(8px)',
-              transition: 'all 0.15s ease'
+              transition: 'all 0.15s ease',
+              whiteSpace: 'nowrap'
             }}
             onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255, 255, 255, 0.16)')}
             onMouseLeave={e => (e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)')}
           >
             <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
-            Sync Feeds
+            <span className="header-sync-text">Sync Feeds</span>
           </button>
 
           {/* User Profile */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, paddingLeft: 14, borderLeft: '1px solid rgba(255, 255, 255, 0.15)' }}>
-            <div style={{ textAlign: 'right' }}>
-              <div style={{ fontSize: 12, fontWeight: 700, color: '#ffffff' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, paddingLeft: 12, borderLeft: '1px solid rgba(255, 255, 255, 0.15)' }}>
+            <div className="header-user-info" style={{ textAlign: 'right' }}>
+              <div style={{ fontSize: 12, fontWeight: 700, color: '#ffffff', whiteSpace: 'nowrap' }}>
                 {approverName}
               </div>
-              <div style={{ fontSize: 10, color: '#38bdf8', fontWeight: 600 }}>
+              <div style={{ fontSize: 10, color: '#38bdf8', fontWeight: 600, whiteSpace: 'nowrap' }}>
                 Operations Controller
               </div>
             </div>
@@ -393,7 +427,8 @@ function ControlRoom({ token, onLogout }: { token: string; onLogout: () => void 
                 gap: 6,
                 fontSize: 11,
                 fontWeight: 700,
-                transition: 'all 0.15s ease'
+                transition: 'all 0.15s ease',
+                whiteSpace: 'nowrap'
               }}
               onMouseEnter={e => {
                 e.currentTarget.style.background = 'rgba(220, 38, 38, 0.28)';
@@ -403,7 +438,7 @@ function ControlRoom({ token, onLogout }: { token: string; onLogout: () => void 
               }}
             >
               <LogOut size={13} />
-              Logout
+              <span className="header-logout-text">Logout</span>
             </button>
           </div>
         </div>
@@ -413,17 +448,26 @@ function ControlRoom({ token, onLogout }: { token: string; onLogout: () => void 
       {/* MAIN LAYOUT: SIDEBAR + WORKSPACE                                   */}
       {/* ------------------------------------------------------------------ */}
       <div className="app-layout">
+        {/* Backdrop overlay for mobile drawer */}
+        <div
+          className={`mobile-nav-backdrop ${mobileNavOpen ? 'open' : ''}`}
+          onClick={() => setMobileNavOpen(false)}
+        />
+
         {/* SIDEBAR NAVIGATION (DARK GLASS) */}
-        <aside style={{
-          background: 'rgba(7, 20, 42, 0.82)',
-          backdropFilter: 'blur(20px)',
-          WebkitBackdropFilter: 'blur(20px)',
-          borderRight: '1px solid rgba(255, 255, 255, 0.14)',
-          padding: '20px 14px',
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'space-between'
-        }}>
+        <aside
+          className={`app-sidebar ${mobileNavOpen ? 'open' : ''}`}
+          style={{
+            background: 'rgba(7, 20, 42, 0.88)',
+            backdropFilter: 'blur(20px)',
+            WebkitBackdropFilter: 'blur(20px)',
+            borderRight: '1px solid rgba(255, 255, 255, 0.14)',
+            padding: '20px 14px',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'space-between'
+          }}
+        >
           <div>
             <div style={{ padding: '0 10px 10px', fontSize: 11, fontWeight: 700, color: '#94a3b8', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
               Operations Navigation
@@ -452,6 +496,7 @@ function ControlRoom({ token, onLogout }: { token: string; onLogout: () => void 
                   <NavLink
                     key={item.path}
                     to={item.path}
+                    onClick={() => setMobileNavOpen(false)}
                     style={({ isActive }) => ({
                       display: 'flex',
                       alignItems: 'center',
@@ -548,7 +593,7 @@ function ControlRoom({ token, onLogout }: { token: string; onLogout: () => void 
         </aside>
 
         {/* WORKSPACE AREA */}
-        <main style={{ padding: 24, overflowY: 'auto', maxHeight: 'calc(100vh - 68px)' }}>
+        <main className="app-main-workspace" style={{ padding: 24, overflowY: 'auto', maxHeight: 'calc(100vh - 68px)' }}>
           {errorBanner && (
             <div style={{
               padding: '12px 16px',
