@@ -9,7 +9,17 @@ export function TasksView({ tasks }: { tasks: MaintenanceTaskItem[] }) {
 
   const filteredTasks = useMemo(() => {
     return tasks.filter(t => {
-      const matchDept = deptFilter === 'ALL' || (t.department_id || '').toUpperCase().includes(deptFilter);
+      const deptUpper = (t.department_id || '').toUpperCase();
+      const matchDept = deptFilter === 'ALL' ||
+        (deptFilter === 'CIVIL' && (deptUpper.includes('CIVIL') || deptUpper.includes('ENG'))) ||
+        (deptFilter === 'S&T' && (deptUpper.includes('S&T') || deptUpper.includes('SMT') || deptUpper.includes('SIGNAL'))) ||
+        (deptFilter === 'TRD' && (deptUpper.includes('TRD') || deptUpper.includes('OHE'))) ||
+        (deptFilter === 'OPERATING' && (deptUpper.includes('OPERAT') || deptUpper.includes('TRAFFIC'))) ||
+        (deptFilter === 'ELECTRICAL' && deptUpper.includes('ELECT')) ||
+        (deptFilter === 'MECHANICAL' && deptUpper.includes('MECH')) ||
+        (deptFilter === 'TRACK_MACHINE' && (deptUpper.includes('MACHINE') || deptUpper.includes('TRACK_M'))) ||
+        deptUpper.includes(deptFilter);
+
       const matchSearch =
         !search ||
         (t.id && t.id.toLowerCase().includes(search.toLowerCase())) ||
@@ -22,22 +32,20 @@ export function TasksView({ tasks }: { tasks: MaintenanceTaskItem[] }) {
   return (
     <div style={{ display: 'grid', gap: 20 }}>
       <div>
-        <h1 style={{ margin: 0, fontSize: 24, fontWeight: 800, color: theme.text }}>
+        <h1 style={{ margin: 0, fontSize: 24, fontWeight: 800, color: '#ffffff', letterSpacing: '-0.02em' }}>
           Unified Multi-Department Maintenance Repository
         </h1>
-        <p style={{ margin: '4px 0 0', fontSize: 13, color: theme.textMuted }}>
+        <p style={{ margin: '4px 0 0', fontSize: 13, color: '#cbd5e1' }}>
           Integrated tasks from Track Management System (TMS), Signalling Maintenance (SMMS), and Traction Distribution (TDMS).
         </p>
       </div>
 
       <div style={{
+        ...cardStyle,
         display: 'flex',
         alignItems: 'center',
         gap: 12,
-        background: theme.surface,
-        padding: 14,
-        borderRadius: 10,
-        border: `1px solid ${theme.border}`
+        padding: 14
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1 }}>
           <Search size={16} color={theme.textDim} />
@@ -50,16 +58,16 @@ export function TasksView({ tasks }: { tasks: MaintenanceTaskItem[] }) {
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span style={{ fontSize: 12, color: theme.textMuted }}>Repository:</span>
+          <span style={{ fontSize: 12, color: theme.textMuted, fontWeight: 600 }}>Department:</span>
           <select
-            style={{ ...inputStyle, width: 170 }}
+            style={{ ...inputStyle, width: 200 }}
             value={deptFilter}
             onChange={e => setDeptFilter(e.target.value)}
           >
-            <option value="ALL">All Repositories</option>
-            <option value="ENGINEERING">TMS (Track / Civil)</option>
-            <option value="SMT">SMMS (Signals / S&T)</option>
-            <option value="TRD">TDMS (Traction / TRD)</option>
+            <option value="ALL">All Departments</option>
+            <option value="CIVIL">Engineering</option>
+            <option value="S&T">S&T</option>
+            <option value="TRD">Electrical / TRD</option>
           </select>
         </div>
       </div>
@@ -68,7 +76,7 @@ export function TasksView({ tasks }: { tasks: MaintenanceTaskItem[] }) {
         <div style={{ overflowX: 'auto' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12, textAlign: 'left' }}>
             <thead>
-              <tr style={{ background: theme.cardHeader, borderBottom: `1px solid ${theme.border}` }}>
+              <tr style={{ background: 'rgba(241, 245, 249, 0.85)', borderBottom: `1px solid ${theme.border}` }}>
                 {['Task ID', 'Asset ID', 'Department', 'Task Classification', 'Priority', 'Duration', 'Overdue Days', 'Safety Flag', 'Gang / Crew Type'].map((h, i) => (
                   <th key={i} style={{ padding: '12px 14px', color: theme.textMuted, fontWeight: 700 }}>{h}</th>
                 ))}
@@ -79,7 +87,13 @@ export function TasksView({ tasks }: { tasks: MaintenanceTaskItem[] }) {
                 const deptColor = getDeptColor(t.department_id);
                 const isOverdue = (t.overdue_days || 0) > 0;
                 return (
-                  <tr key={t.id || idx} style={{ borderBottom: `1px solid ${theme.border}` }}>
+                  <tr
+                    key={t.id || idx}
+                    style={{
+                      borderBottom: `1px solid ${theme.border}`,
+                      background: idx % 2 === 0 ? 'transparent' : 'rgba(241, 245, 249, 0.5)'
+                    }}
+                  >
                     <td style={{ padding: '12px 14px', fontWeight: 700, color: theme.cyan }}>{t.id}</td>
                     <td style={{ padding: '12px 14px', color: theme.textDim }}>{t.asset_id}</td>
                     <td style={{ padding: '12px 14px' }}>
@@ -119,7 +133,7 @@ export function TasksView({ tasks }: { tasks: MaintenanceTaskItem[] }) {
 
               {filteredTasks.length === 0 && (
                 <tr>
-                  <td colSpan={7} style={{ padding: 36, textAlign: 'center', color: theme.textDim }}>
+                  <td colSpan={9} style={{ padding: 36, textAlign: 'center', color: theme.textDim }}>
                     {tasks.length === 0
                       ? 'No maintenance tasks loaded from TMS/SMMS/TDMS repositories.'
                       : 'No maintenance tasks match the current search query or repository filter.'}

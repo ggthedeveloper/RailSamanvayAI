@@ -6,52 +6,88 @@ export const API_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:80
 export const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || 'AIzaSyCubQwLYG5L59LJawYmwhbSnYqCf70fT2s';
 
 export const theme = {
-  bg: '#f8fafc',
-  surface: '#ffffff',
-  card: '#ffffff',
-  cardHeader: '#f8fafc',
-  border: '#e2e8f0',
-  borderLight: '#cbd5e1',
-  cyan: '#0284c7', // sharper sky-600 for contrast
-  blue: '#2563eb', // solid corporate royal blue
+  bg: 'transparent',
+  surface: 'rgba(255, 255, 255, 0.95)',
+  card: 'rgba(255, 255, 255, 0.95)',
+  cardHeader: 'rgba(248, 250, 252, 0.88)',
+  border: 'rgba(226, 232, 240, 0.80)',
+  borderLight: 'rgba(203, 213, 225, 0.65)',
+  cyan: '#0284c7', // sharper sky-600
+  blue: '#2563eb', // solid corporate railway blue
+  blueDark: '#1d4ed8', // deep railway blue
+  brightBlue: '#2f6bff',
+  navy: '#071426', // deep navy
+  darkNavy: '#0b1830',
+  navyCard: 'rgba(7, 20, 42, 0.82)',
+  secondaryBlue: '#60a5fa',
   amber: '#d97706', // amber-600
   green: '#16a34a', // green-600
   red: '#dc2626',   // red-600
   purple: '#7c3aed', // violet-600
   text: '#0f172a',
-  textMuted: '#475569',
-  textDim: '#64748b'
+  textLight: '#f8fafc',
+  textMuted: '#64748b',
+  textDim: '#94a3b8'
 };
 
 export const cardStyle: CSSProperties = {
-  background: theme.card,
-  border: `1px solid ${theme.border}`,
-  borderRadius: 12,
-  padding: 20,
-  boxShadow: '0 1px 3px 0 rgba(15, 23, 42, 0.04), 0 1px 2px -1px rgba(15, 23, 42, 0.04)'
+  background: 'rgba(255, 255, 255, 0.95)',
+  backdropFilter: 'blur(18px)',
+  WebkitBackdropFilter: 'blur(18px)',
+  border: '1px solid rgba(255, 255, 255, 0.70)',
+  borderRadius: 18,
+  padding: 24,
+  boxShadow: '0 16px 45px rgba(0, 0, 0, 0.16)',
+  boxSizing: 'border-box'
 };
+
+export const whiteGlassCardStyle: CSSProperties = {
+  background: 'rgba(255, 255, 255, 0.95)',
+  backdropFilter: 'blur(18px)',
+  WebkitBackdropFilter: 'blur(18px)',
+  border: '1px solid rgba(255, 255, 255, 0.70)',
+  borderRadius: 18,
+  padding: 24,
+  boxShadow: '0 16px 45px rgba(0, 0, 0, 0.16)',
+  color: '#0f172a',
+  boxSizing: 'border-box'
+};
+
+export const darkGlassCardStyle: CSSProperties = {
+  background: 'rgba(7, 20, 42, 0.82)',
+  backdropFilter: 'blur(18px)',
+  WebkitBackdropFilter: 'blur(18px)',
+  border: '1px solid rgba(255, 255, 255, 0.16)',
+  borderRadius: 18,
+  padding: 24,
+  boxShadow: '0 20px 50px rgba(0, 0, 0, 0.28)',
+  color: '#ffffff',
+  boxSizing: 'border-box'
+};
+
+export const glassCardStyle = darkGlassCardStyle;
 
 export const badgeStyle = (bg: string, fg: string): CSSProperties => ({
   display: 'inline-flex',
   alignItems: 'center',
-  padding: '3px 9px',
+  padding: '4px 10px',
   borderRadius: 6,
   fontSize: 11,
-  fontWeight: 600,
+  fontWeight: 700,
   letterSpacing: '0.02em',
   background: bg,
   color: fg,
-  border: `1px solid ${fg}28`
+  border: `1px solid ${fg}35`
 });
 
 export const inputStyle: CSSProperties = {
   width: '100%',
   boxSizing: 'border-box',
-  padding: '9px 12px',
+  padding: '10px 14px',
   background: '#ffffff',
   border: '1px solid #cbd5e1',
-  borderRadius: 8,
-  color: theme.text,
+  borderRadius: 10,
+  color: '#0f172a',
   fontSize: 13,
   outline: 'none',
   transition: 'border-color 0.15s ease, box-shadow 0.15s ease'
@@ -62,15 +98,15 @@ export const buttonPrimary: CSSProperties = {
   alignItems: 'center',
   justifyContent: 'center',
   gap: 8,
-  padding: '9px 16px',
-  background: '#2563eb',
+  padding: '10px 18px',
+  background: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)',
   color: '#ffffff',
-  border: '1px solid #1d4ed8',
-  borderRadius: 8,
-  fontWeight: 600,
+  border: '1px solid rgba(255, 255, 255, 0.25)',
+  borderRadius: 9,
+  fontWeight: 700,
   fontSize: 13,
   cursor: 'pointer',
-  boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+  boxShadow: '0 4px 14px rgba(37, 99, 235, 0.35)',
   transition: 'all 0.15s ease'
 };
 
@@ -79,15 +115,33 @@ export const buttonSecondary: CSSProperties = {
   alignItems: 'center',
   justifyContent: 'center',
   gap: 8,
-  padding: '9px 16px',
-  background: '#ffffff',
-  color: '#334155',
+  padding: '10px 18px',
+  background: 'rgba(255, 255, 255, 0.90)',
+  backdropFilter: 'blur(8px)',
+  color: '#1e293b',
   border: '1px solid #cbd5e1',
-  borderRadius: 8,
+  borderRadius: 9,
   fontWeight: 600,
   fontSize: 13,
   cursor: 'pointer',
-  boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+  boxShadow: '0 2px 6px rgba(0, 0, 0, 0.05)',
+  transition: 'all 0.15s ease'
+};
+
+export const buttonDarkGlass: CSSProperties = {
+  display: 'inline-flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  gap: 8,
+  padding: '10px 18px',
+  background: 'rgba(255, 255, 255, 0.08)',
+  backdropFilter: 'blur(8px)',
+  color: '#ffffff',
+  border: '1px solid rgba(255, 255, 255, 0.22)',
+  borderRadius: 9,
+  fontWeight: 600,
+  fontSize: 13,
+  cursor: 'pointer',
   transition: 'all 0.15s ease'
 };
 
@@ -110,18 +164,24 @@ export function getCoords(s?: Station | null): [number, number] | null {
   return null;
 }
 
-export function getDeptColor(dept: string): { bg: string; text: string } {
+export const PRIMARY_DEPARTMENTS = [
+  'Engineering',
+  'S&T',
+  'Electrical / TRD'
+] as const;
+
+export function getDeptColor(dept: string): { bg: string; text: string; border: string } {
   const d = (dept || '').toUpperCase();
-  if (d.includes('ENG') || d.includes('CIVIL') || d.includes('TRACK')) {
-    return { bg: 'rgba(14, 165, 233, 0.1)', text: '#0284c7' }; // sky 600
+  if (d.includes('ENG') || d.includes('CIVIL') || d.includes('P-WAY') || d.includes('PERMANENT')) {
+    return { bg: 'rgba(2, 132, 199, 0.12)', text: '#0284c7', border: 'rgba(2, 132, 199, 0.30)' }; // Engineering
   }
-  if (d.includes('SMT') || d.includes('S&T') || d.includes('SIGNAL')) {
-    return { bg: 'rgba(245, 158, 11, 0.1)', text: '#d97706' }; // amber 600
+  if (d.includes('SMT') || d.includes('S&T') || d.includes('SIGNAL') || d.includes('TELECOM')) {
+    return { bg: 'rgba(217, 119, 6, 0.12)', text: '#d97706', border: 'rgba(217, 119, 6, 0.30)' }; // S&T
   }
-  if (d.includes('TRD') || d.includes('OHE') || d.includes('ELECT')) {
-    return { bg: 'rgba(16, 185, 129, 0.1)', text: '#059669' }; // emerald 600
+  if (d.includes('TRD') || d.includes('OHE') || d.includes('TRACTION') || d.includes('ELECTRICAL')) {
+    return { bg: 'rgba(5, 150, 105, 0.12)', text: '#059669', border: 'rgba(5, 150, 105, 0.30)' }; // Electrical / TRD
   }
-  return { bg: 'rgba(139, 92, 246, 0.1)', text: '#7c3aed' }; // violet 600
+  return { bg: 'rgba(37, 99, 235, 0.12)', text: '#2563eb', border: 'rgba(37, 99, 235, 0.30)' };
 }
 
 export function getRiskLevel(risk: number | string | undefined | null): 'HIGH' | 'MEDIUM' | 'LOW' {
@@ -149,7 +209,7 @@ export function getRiskTheme(risk: number | string | undefined | null) {
       return {
         level: 'HIGH' as const,
         color: '#dc2626', // Red
-        bg: 'rgba(239, 68, 68, 0.10)',
+        bg: 'rgba(239, 68, 68, 0.12)',
         border: 'rgba(239, 68, 68, 0.35)',
         badgeBg: 'rgba(239, 68, 68, 0.18)',
         badge: badgeStyle('rgba(239, 68, 68, 0.18)', '#dc2626')
@@ -158,7 +218,7 @@ export function getRiskTheme(risk: number | string | undefined | null) {
       return {
         level: 'MEDIUM' as const,
         color: '#ca8a04', // Yellow / Amber
-        bg: 'rgba(234, 179, 8, 0.10)',
+        bg: 'rgba(234, 179, 8, 0.12)',
         border: 'rgba(234, 179, 8, 0.35)',
         badgeBg: 'rgba(234, 179, 8, 0.18)',
         badge: badgeStyle('rgba(234, 179, 8, 0.18)', '#ca8a04')
@@ -168,7 +228,7 @@ export function getRiskTheme(risk: number | string | undefined | null) {
       return {
         level: 'LOW' as const,
         color: '#16a34a', // Green
-        bg: 'rgba(22, 163, 74, 0.10)',
+        bg: 'rgba(22, 163, 74, 0.12)',
         border: 'rgba(22, 163, 74, 0.35)',
         badgeBg: 'rgba(22, 163, 74, 0.18)',
         badge: badgeStyle('rgba(22, 163, 74, 0.18)', '#16a34a')
@@ -179,11 +239,10 @@ export function getRiskTheme(risk: number | string | undefined | null) {
 export function getPriorityBadge(priority: string) {
   const p = (priority || '').toUpperCase();
   if (p.includes('P1') || p.includes('CRITICAL') || p.includes('HIGH') || p.includes('URGENT')) {
-    return badgeStyle('rgba(239, 68, 68, 0.15)', '#dc2626'); // Red
+    return badgeStyle('rgba(239, 68, 68, 0.14)', '#dc2626'); // Red
   }
   if (p.includes('P2') || p.includes('MEDIUM') || p.includes('WARNING') || p.includes('MODERATE') || p.includes('SCHEDULED')) {
-    return badgeStyle('rgba(234, 179, 8, 0.18)', '#ca8a04'); // Yellow
+    return badgeStyle('rgba(234, 179, 8, 0.16)', '#ca8a04'); // Yellow / Amber
   }
-  return badgeStyle('rgba(22, 163, 74, 0.15)', '#16a34a'); // Green (Low / Normal / Routine / P3 / P4)
+  return badgeStyle('rgba(22, 163, 74, 0.14)', '#16a34a'); // Green (Low / Normal / Routine / P3 / P4)
 }
-

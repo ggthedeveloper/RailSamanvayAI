@@ -220,7 +220,7 @@ export function MapView({
     <div style={{ ...cardStyle, padding: 0, overflow: 'hidden', height: 620, display: 'flex', flexDirection: 'column' }}>
       <div style={{
         padding: '12px 18px',
-        background: theme.cardHeader,
+        background: 'rgba(241, 245, 249, 0.85)',
         borderBottom: `1px solid ${theme.border}`,
         display: 'flex',
         alignItems: 'center',

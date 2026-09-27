@@ -80,28 +80,27 @@ export function OverviewView({
   return (
     <div style={{ display: 'grid', gap: 20 }}>
       {/* ================================================================== */}
-      {/* 1. HERO BANNER WITH BACKGROUND IMAGE                               */}
+      {/* 1. HERO BANNER WITH BACKGROUND IMAGE (DARK GLASS)                  */}
       {/* ================================================================== */}
       <div className="hero-banner-flex" style={{
         position: 'relative',
-        borderRadius: 16,
+        borderRadius: 18,
         overflow: 'hidden',
-        background: '#ffffff',
-        border: '1px solid #e2e8f0',
+        background: '#07142a',
+        backdropFilter: 'blur(20px)',
+        WebkitBackdropFilter: 'blur(20px)',
+        border: '1px solid rgba(255, 255, 255, 0.16)',
         minHeight: 180,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
         padding: '24px 32px',
-        boxShadow: '0 1px 3px rgba(0,0,0,0.03)'
+        boxShadow: '0 20px 50px rgba(0, 0, 0, 0.35)'
       }}>
-        {/* Train viaduct landscape background on the right */}
+        {/* Train viaduct landscape background */}
         <div style={{
           position: 'absolute',
-          right: 0,
-          top: 0,
-          bottom: 0,
-          width: '68%',
+          inset: 0,
           backgroundImage: "url('/banner_hero.png')",
           backgroundPosition: 'right center',
           backgroundRepeat: 'no-repeat',
@@ -109,24 +108,22 @@ export function OverviewView({
           zIndex: 1
         }} />
 
-        {/* Gradient wash from left to blend background seamlessly */}
+        {/* Seamless dark navy to transparent gradient overlay */}
         <div style={{
           position: 'absolute',
-          left: 0,
-          top: 0,
-          bottom: 0,
-          width: '56%',
-          background: 'linear-gradient(90deg, #ffffff 65%, rgba(255,255,255,0.9) 82%, rgba(255,255,255,0) 100%)',
-          zIndex: 2
+          inset: 0,
+          background: 'linear-gradient(90deg, #07142a 0%, #07142a 35%, rgba(7, 20, 42, 0.95) 42%, rgba(7, 20, 42, 0.75) 52%, rgba(7, 20, 42, 0.40) 65%, rgba(7, 20, 42, 0.10) 78%, rgba(7, 20, 42, 0) 88%)',
+          zIndex: 2,
+          pointerEvents: 'none'
         }} />
 
         {/* Left Headline */}
         <div style={{ position: 'relative', zIndex: 3, maxWidth: '52%' }}>
           <div style={{
             fontSize: 11,
-            fontWeight: 700,
+            fontWeight: 800,
             letterSpacing: '0.12em',
-            color: '#64748b',
+            color: '#38bdf8',
             textTransform: 'uppercase',
             marginBottom: 6
           }}>
@@ -136,7 +133,7 @@ export function OverviewView({
             margin: '0 0 6px 0',
             fontSize: 32,
             fontWeight: 800,
-            color: '#0f172a',
+            color: '#ffffff',
             letterSpacing: '-0.02em',
             lineHeight: 1.15
           }}>
@@ -146,11 +143,11 @@ export function OverviewView({
           <p style={{
             margin: 0,
             fontSize: 13,
-            fontWeight: 500,
-            color: '#475569',
+            fontWeight: 400,
+            color: '#cbd5e1',
             lineHeight: 1.4
           }}>
-            AI-enabled coordination for Engineering, S&T and TRD maintenance.
+            AI-enabled coordination for Engineering, S&amp;T and TRD maintenance.
           </p>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 14, flexWrap: 'wrap' }}>
@@ -161,15 +158,15 @@ export function OverviewView({
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: 8,
-                background: '#2563eb',
+                background: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)',
                 color: '#ffffff',
-                border: 'none',
+                border: '1px solid rgba(255, 255, 255, 0.25)',
                 padding: '9px 16px',
                 borderRadius: 8,
                 fontSize: 13,
                 fontWeight: 700,
                 cursor: optimizing ? 'not-allowed' : 'pointer',
-                boxShadow: '0 2px 6px rgba(37,99,235,0.3)',
+                boxShadow: '0 4px 14px rgba(37,99,235,0.40)',
                 transition: 'all 0.15s ease'
               }}
             >
@@ -183,9 +180,9 @@ export function OverviewView({
                 fontWeight: 700,
                 padding: '5px 10px',
                 borderRadius: 8,
-                background: optStatus === 'OPTIMAL' ? '#f0fdf4' : '#fef3c7',
-                color: optStatus === 'OPTIMAL' ? '#15803d' : '#b45309',
-                border: '1px solid ' + (optStatus === 'OPTIMAL' ? '#bbf7d0' : '#fcd34d')
+                background: optStatus === 'OPTIMAL' ? 'rgba(34, 197, 94, 0.20)' : 'rgba(245, 158, 11, 0.20)',
+                color: '#ffffff',
+                border: '1px solid ' + (optStatus === 'OPTIMAL' ? 'rgba(74, 222, 128, 0.4)' : 'rgba(251, 191, 36, 0.4)')
               }}>
                 CP-SAT: {optStatus}
               </span>
@@ -197,20 +194,20 @@ export function OverviewView({
         <div className="hero-banner-glass" style={{
           position: 'relative',
           zIndex: 3,
-          backdropFilter: 'blur(10px)',
-          WebkitBackdropFilter: 'blur(10px)',
-          background: 'rgba(255, 255, 255, 0.65)',
-          border: '1px solid rgba(255, 255, 255, 0.85)',
+          backdropFilter: 'blur(12px)',
+          WebkitBackdropFilter: 'blur(12px)',
+          background: 'rgba(255, 255, 255, 0.10)',
+          border: '1px solid rgba(255, 255, 255, 0.20)',
           borderRadius: 14,
           padding: '16px 20px',
-          boxShadow: '0 4px 20px rgba(0,0,0,0.06)',
+          boxShadow: '0 8px 30px rgba(0,0,0,0.25)',
           maxWidth: 260,
           textAlign: 'center'
         }}>
           <div style={{
             fontSize: 13,
             fontWeight: 600,
-            color: '#1e293b',
+            color: '#f8fafc',
             fontStyle: 'italic',
             lineHeight: 1.4,
             marginBottom: 10
@@ -220,15 +217,15 @@ export function OverviewView({
           <div style={{
             width: 48,
             height: 2,
-            background: 'rgba(100, 116, 139, 0.25)',
+            background: 'rgba(255, 255, 255, 0.25)',
             margin: '0 auto 8px auto',
             borderRadius: 1
           }} />
           <div style={{
             fontSize: 11,
-            fontWeight: 600,
-            color: '#475569',
-            letterSpacing: '0.01em'
+            fontWeight: 700,
+            color: '#38bdf8',
+            letterSpacing: '0.04em'
           }}>
             Ministry of Railways
           </div>
@@ -236,7 +233,7 @@ export function OverviewView({
       </div>
 
       {/* ================================================================== */}
-      {/* 2. ROW OF 4 METRIC KPI CARDS                                       */}
+      {/* 2. ROW OF 4 METRIC KPI CARDS (WHITE GLASS)                         */}
       {/* ================================================================== */}
       <div style={{
         display: 'grid',
@@ -245,11 +242,13 @@ export function OverviewView({
       }}>
         {/* Card 1: Maintenance Demands */}
         <div style={{
-          background: '#ffffff',
-          border: '1px solid #e2e8f0',
-          borderRadius: 14,
-          padding: '18px 20px',
-          boxShadow: '0 1px 3px rgba(0,0,0,0.03)',
+          background: 'rgba(255, 255, 255, 0.95)',
+          backdropFilter: 'blur(18px)',
+          WebkitBackdropFilter: 'blur(18px)',
+          border: '1px solid rgba(255, 255, 255, 0.70)',
+          borderRadius: 18,
+          padding: '20px 22px',
+          boxShadow: '0 16px 40px rgba(0, 0, 0, 0.15)',
           display: 'flex',
           alignItems: 'center',
           gap: 14
@@ -283,11 +282,13 @@ export function OverviewView({
 
         {/* Card 2: Optimized Block Assignments */}
         <div style={{
-          background: '#ffffff',
-          border: '1px solid #e2e8f0',
-          borderRadius: 14,
-          padding: '18px 20px',
-          boxShadow: '0 1px 3px rgba(0,0,0,0.03)',
+          background: 'rgba(255, 255, 255, 0.95)',
+          backdropFilter: 'blur(18px)',
+          WebkitBackdropFilter: 'blur(18px)',
+          border: '1px solid rgba(255, 255, 255, 0.70)',
+          borderRadius: 18,
+          padding: '20px 22px',
+          boxShadow: '0 16px 40px rgba(0, 0, 0, 0.15)',
           display: 'flex',
           alignItems: 'center',
           gap: 14
@@ -321,11 +322,13 @@ export function OverviewView({
 
         {/* Card 3: Joint Blocks */}
         <div style={{
-          background: '#ffffff',
-          border: '1px solid #e2e8f0',
-          borderRadius: 14,
-          padding: '18px 20px',
-          boxShadow: '0 1px 3px rgba(0,0,0,0.03)',
+          background: 'rgba(255, 255, 255, 0.95)',
+          backdropFilter: 'blur(18px)',
+          WebkitBackdropFilter: 'blur(18px)',
+          border: '1px solid rgba(255, 255, 255, 0.70)',
+          borderRadius: 18,
+          padding: '20px 22px',
+          boxShadow: '0 16px 40px rgba(0, 0, 0, 0.15)',
           display: 'flex',
           alignItems: 'center',
           gap: 14
@@ -358,11 +361,13 @@ export function OverviewView({
 
         {/* Card 4: Block Windows Utilized */}
         <div style={{
-          background: '#ffffff',
-          border: '1px solid #e2e8f0',
-          borderRadius: 14,
-          padding: '18px 20px',
-          boxShadow: '0 1px 3px rgba(0,0,0,0.03)',
+          background: 'rgba(255, 255, 255, 0.95)',
+          backdropFilter: 'blur(18px)',
+          WebkitBackdropFilter: 'blur(18px)',
+          border: '1px solid rgba(255, 255, 255, 0.70)',
+          borderRadius: 18,
+          padding: '20px 22px',
+          boxShadow: '0 16px 40px rgba(0, 0, 0, 0.15)',
           display: 'flex',
           alignItems: 'center',
           gap: 14
@@ -401,11 +406,13 @@ export function OverviewView({
       <div className="dashboard-grid">
         {/* Left Card: Department-wise Maintenance Tasks */}
         <div style={{
-          background: '#ffffff',
-          border: '1px solid #e2e8f0',
-          borderRadius: 16,
+          background: 'rgba(255, 255, 255, 0.95)',
+          backdropFilter: 'blur(18px)',
+          WebkitBackdropFilter: 'blur(18px)',
+          border: '1px solid rgba(255, 255, 255, 0.70)',
+          borderRadius: 18,
           padding: '22px 24px',
-          boxShadow: '0 1px 3px rgba(0,0,0,0.03)'
+          boxShadow: '0 16px 40px rgba(0, 0, 0, 0.15)'
         }}>
           <h3 style={{ margin: '0 0 20px 0', fontSize: 16, fontWeight: 700, color: '#0f172a' }}>
             Department-wise Maintenance Tasks
@@ -505,13 +512,15 @@ export function OverviewView({
           </div>
         </div>
 
-        {/* Right Card: Upcoming Maintenance Blocks */}
+        {/* Right Card: Upcoming Maintenance Blocks (White Glass) */}
         <div style={{
-          background: '#ffffff',
-          border: '1px solid #e2e8f0',
-          borderRadius: 16,
+          background: 'rgba(255, 255, 255, 0.95)',
+          backdropFilter: 'blur(18px)',
+          WebkitBackdropFilter: 'blur(18px)',
+          border: '1px solid rgba(255, 255, 255, 0.70)',
+          borderRadius: 18,
           padding: '22px 24px',
-          boxShadow: '0 1px 3px rgba(0,0,0,0.03)'
+          boxShadow: '0 16px 40px rgba(0, 0, 0, 0.15)'
         }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
             <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: '#0f172a' }}>
@@ -690,24 +699,27 @@ export function OverviewView({
       </div>
 
       {/* ================================================================== */}
-      {/* 4. ACTIVE CONFLICTS / OPERATIONAL EXCEPTIONS (IF ANY)              */}
+      {/* 4. ACTIVE CONFLICTS / OPERATIONAL EXCEPTIONS (GLASS BANNER)        */}
       {/* ================================================================== */}
       {conflicts.length > 0 && (
         <div style={{
-          background: '#fffbeb',
-          border: '1px solid #fde68a',
-          borderRadius: 14,
+          background: 'rgba(254, 243, 199, 0.94)',
+          backdropFilter: 'blur(16px)',
+          WebkitBackdropFilter: 'blur(16px)',
+          border: '1px solid rgba(251, 191, 36, 0.80)',
+          borderRadius: 16,
           padding: '16px 20px',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
           flexWrap: 'wrap',
-          gap: 12
+          gap: 12,
+          boxShadow: '0 8px 30px rgba(0, 0, 0, 0.08)'
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <div style={{
-              width: 36,
-              height: 36,
+              width: 38,
+              height: 38,
               borderRadius: '50%',
               background: '#fef3c7',
               display: 'flex',
@@ -719,7 +731,7 @@ export function OverviewView({
               <AlertTriangle size={20} />
             </div>
             <div>
-              <div style={{ fontSize: 13, fontWeight: 700, color: '#92400e' }}>
+              <div style={{ fontSize: 13, fontWeight: 800, color: '#92400e' }}>
                 {conflicts.length} Operational Exceptions Detected
               </div>
               <div style={{ fontSize: 11, color: '#b45309', marginTop: 1 }}>
@@ -740,7 +752,8 @@ export function OverviewView({
               borderRadius: 8,
               fontSize: 12,
               fontWeight: 700,
-              cursor: 'pointer'
+              cursor: 'pointer',
+              boxShadow: '0 2px 6px rgba(0,0,0,0.05)'
             }}
           >
             Review Exceptions <ArrowRight size={13} />
@@ -749,23 +762,26 @@ export function OverviewView({
       )}
 
       {/* ================================================================== */}
-      {/* 5. BOTTOM SUSTAINABILITY / IMPACT BANNER                           */}
+      {/* 5. BOTTOM SUSTAINABILITY / IMPACT BANNER (GLASS BANNER)            */}
       {/* ================================================================== */}
       <div style={{
-        background: '#f0fdf4',
-        border: '1px solid #bbf7d0',
-        borderRadius: 14,
+        background: 'rgba(240, 253, 244, 0.94)',
+        backdropFilter: 'blur(16px)',
+        WebkitBackdropFilter: 'blur(16px)',
+        border: '1px solid rgba(187, 247, 208, 0.85)',
+        borderRadius: 16,
         padding: '16px 24px',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
         flexWrap: 'wrap',
-        gap: 14
+        gap: 14,
+        boxShadow: '0 8px 30px rgba(0, 0, 0, 0.08)'
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
           <div style={{
-            width: 40,
-            height: 40,
+            width: 42,
+            height: 42,
             borderRadius: '50%',
             background: '#dcfce7',
             display: 'flex',
@@ -777,10 +793,10 @@ export function OverviewView({
             <Leaf size={22} />
           </div>
           <div>
-            <div style={{ fontSize: 14, fontWeight: 700, color: '#14532d' }}>
+            <div style={{ fontSize: 14, fontWeight: 800, color: '#14532d' }}>
               {downtimeHours} hours of corridor downtime saved this month
             </div>
-            <div style={{ fontSize: 12, color: '#4b5563', marginTop: 2 }}>
+            <div style={{ fontSize: 12, color: '#374151', marginTop: 2 }}>
               Through integrated block planning and cross-department coordination.
             </div>
           </div>

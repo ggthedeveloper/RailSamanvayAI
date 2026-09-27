@@ -153,9 +153,9 @@ export function RouteAnalyzer({
               value={department}
               onChange={e => setDepartment(e.target.value)}
             >
-              <option value="ENGINEERING">ENGINEERING (Track)</option>
-              <option value="SMT">S&T (Signals/Interlocking)</option>
-              <option value="TRD">TRD (OHE Traction)</option>
+              <option value="ENGINEERING">Engineering</option>
+              <option value="SMT">S&T</option>
+              <option value="TRD">Electrical / TRD</option>
             </select>
           </div>
 

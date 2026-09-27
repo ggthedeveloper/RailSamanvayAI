@@ -48,10 +48,10 @@ export function WeeklyView({ plans }: { plans: PlanTask[] }) {
   return (
     <div style={{ display: 'grid', gap: 20 }}>
       <div>
-        <h1 style={{ margin: 0, fontSize: 24, fontWeight: 800, color: theme.text }}>
+        <h1 style={{ margin: 0, fontSize: 24, fontWeight: 800, color: '#ffffff', letterSpacing: '-0.02em' }}>
           Weekly 7-Day Corridor Possession Schedule
         </h1>
-        <p style={{ margin: '4px 0 0', fontSize: 13, color: theme.textMuted }}>
+        <p style={{ margin: '4px 0 0', fontSize: 13, color: '#cbd5e1' }}>
           Corridor-by-corridor breakdown of scheduled line blocks, power isolations, and joint multi-department slots.
         </p>
       </div>
@@ -113,8 +113,8 @@ export function WeeklyView({ plans }: { plans: PlanTask[] }) {
                   return (
                     <div key={i} style={{
                       padding: 12,
-                      background: theme.bg,
-                      border: `1px solid ${theme.border}`,
+                      background: 'rgba(241, 245, 249, 0.75)',
+                      border: '1px solid rgba(226, 232, 240, 0.9)',
                       borderRadius: 8
                     }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>

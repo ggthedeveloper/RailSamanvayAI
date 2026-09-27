@@ -81,7 +81,16 @@ export function PlanningView({
         (p.asset_id && p.asset_id.toLowerCase().includes(q)) ||
         (p.task_type && p.task_type.toLowerCase().includes(q));
 
-      const matchDept = deptFilter === 'ALL' || (p.department || '').toUpperCase() === deptFilter;
+      const deptUpper = (p.department || '').toUpperCase();
+      const matchDept = deptFilter === 'ALL' ||
+        (deptFilter === 'CIVIL' && (deptUpper.includes('CIVIL') || deptUpper.includes('ENG'))) ||
+        (deptFilter === 'S&T' && (deptUpper.includes('S&T') || deptUpper.includes('SMT') || deptUpper.includes('SIGNAL'))) ||
+        (deptFilter === 'TRD' && (deptUpper.includes('TRD') || deptUpper.includes('OHE'))) ||
+        (deptFilter === 'OPERATING' && (deptUpper.includes('OPERAT') || deptUpper.includes('TRAFFIC'))) ||
+        (deptFilter === 'ELECTRICAL' && deptUpper.includes('ELECT')) ||
+        (deptFilter === 'MECHANICAL' && deptUpper.includes('MECH')) ||
+        (deptFilter === 'TRACK_MACHINE' && (deptUpper.includes('MACHINE') || deptUpper.includes('TRACK_M'))) ||
+        deptUpper.includes(deptFilter);
       const matchPriority = priorityFilter === 'ALL' || (p.priority || '').toUpperCase().includes(priorityFilter);
       const matchSafety = !safetyOnly || p.safety_critical === true;
       const matchJoint = !jointOnly || p.is_joint_possession === true;
@@ -125,10 +134,10 @@ export function PlanningView({
       {/* Header with Horizon Selector & Run Trigger */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 14 }}>
         <div>
-          <h1 style={{ margin: 0, fontSize: 24, fontWeight: 800, color: theme.text }}>
+          <h1 style={{ margin: 0, fontSize: 24, fontWeight: 800, color: '#ffffff', letterSpacing: '-0.02em' }}>
             Automatic Block Planning Workspace
           </h1>
-          <p style={{ margin: '4px 0 0', fontSize: 13, color: theme.textMuted }}>
+          <p style={{ margin: '4px 0 0', fontSize: 13, color: '#cbd5e1' }}>
             Constraint optimization engine solving corridor possessions with Google OR-Tools CP-SAT.
           </p>
         </div>
@@ -137,8 +146,9 @@ export function PlanningView({
           {/* Horizon Toggle */}
           <div style={{
             display: 'flex',
-            background: theme.bg,
-            border: `1px solid ${theme.border}`,
+            background: 'rgba(7, 20, 42, 0.75)',
+            backdropFilter: 'blur(12px)',
+            border: '1px solid rgba(255, 255, 255, 0.15)',
             borderRadius: 8,
             padding: 3
           }}>
@@ -237,7 +247,7 @@ export function PlanningView({
           <span style={{ fontSize: 11, color: theme.textDim, fontWeight: 700, textTransform: 'uppercase' }}>
             Scheduled / Capacity
           </span>
-          <div style={{ fontSize: 16, fontWeight: 800, color: theme.text, marginTop: 4 }}>
+          <div style={{ fontSize: 16, fontWeight: 800, color: '#ffffff', marginTop: 4 }}>
             {plans.length} Tasks Scheduled
           </div>
           <div style={{ fontSize: 11, color: theme.textMuted, marginTop: 2 }}>
@@ -272,14 +282,12 @@ export function PlanningView({
 
       {/* Filter Bar */}
       <div style={{
+        ...cardStyle,
         display: 'flex',
         alignItems: 'center',
         gap: 12,
         flexWrap: 'wrap',
-        background: theme.surface,
         padding: 14,
-        borderRadius: 10,
-        border: `1px solid ${theme.border}`
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1, minWidth: 220 }}>
           <Search size={16} color={theme.textDim} />
@@ -292,16 +300,16 @@ export function PlanningView({
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span style={{ fontSize: 12, color: theme.textMuted }}>Dept:</span>
+          <span style={{ fontSize: 12, color: theme.textMuted, fontWeight: 600 }}>Dept:</span>
           <select
-            style={{ ...inputStyle, width: 130 }}
+            style={{ ...inputStyle, width: 175 }}
             value={deptFilter}
             onChange={e => { setDeptFilter(e.target.value); setCurrentPage(1); }}
           >
-            <option value="ALL">All Depts</option>
-            <option value="ENGINEERING">Engineering</option>
-            <option value="SMT">S&T</option>
-            <option value="TRD">TRD</option>
+            <option value="ALL">All Departments</option>
+            <option value="CIVIL">Engineering</option>
+            <option value="S&T">S&T</option>
+            <option value="TRD">Electrical / TRD</option>
           </select>
         </div>
 
@@ -379,7 +387,7 @@ export function PlanningView({
         <div style={{ overflowX: 'auto' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12, textAlign: 'left' }}>
             <thead>
-              <tr style={{ background: theme.cardHeader, borderBottom: `1px solid ${theme.border}` }}>
+              <tr style={{ background: 'rgba(241, 245, 249, 0.85)', borderBottom: `1px solid ${theme.border}` }}>
                 {['Task ID', 'Block ID', 'Corridor / Section', 'Department', 'Task Type', 'Date / Window', 'Duration', 'Priority', 'Possession Mode', 'Safety', 'Status', 'Possession Authorization', 'Action'].map((h, i) => (
                   <th key={i} style={{ padding: '12px 14px', color: theme.textMuted, fontWeight: 700 }}>
                     {h}
@@ -537,7 +545,7 @@ export function PlanningView({
         {/* Clean Pagination Bar */}
         <div style={{
           padding: '12px 16px',
-          background: theme.cardHeader,
+          background: 'rgba(248, 250, 252, 0.85)',
           borderTop: `1px solid ${theme.border}`,
           fontSize: 12,
           color: theme.textMuted,

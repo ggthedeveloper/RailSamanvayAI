@@ -6,11 +6,11 @@ export function MonthlyView({ goodsForecasts }: { goodsForecasts: GoodsForecastI
   return (
     <div style={{ display: 'grid', gap: 20 }}>
       <div>
-        <h1 style={{ margin: 0, fontSize: 24, fontWeight: 800, color: theme.text }}>
+        <h1 style={{ margin: 0, fontSize: 24, fontWeight: 800, color: '#ffffff', letterSpacing: '-0.02em' }}>
           Monthly Rolling Corridor Plan (30-Day Outlook)
         </h1>
-        <p style={{ margin: '4px 0 0', fontSize: 13, color: theme.textMuted }}>
-          Macro corridor density analysis cross-referenced with freight train forecasts from FOIS/COA.
+        <p style={{ margin: '4px 0 0', fontSize: 13, color: '#cbd5e1' }}>
+          Macro corridor density analysis cross-referenced with freight traffic forecasts from FOIS/COA.
         </p>
       </div>
 
@@ -23,9 +23,9 @@ export function MonthlyView({ goodsForecasts }: { goodsForecasts: GoodsForecastI
           {goodsForecasts.slice(0, 10).map((gf, i) => (
             <div key={i} style={{
               padding: 14,
-              background: theme.bg,
+              background: 'rgba(241, 245, 249, 0.75)',
               borderRadius: 8,
-              border: `1px solid ${theme.border}`,
+              border: '1px solid rgba(226, 232, 240, 0.9)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
